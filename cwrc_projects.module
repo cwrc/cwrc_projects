@@ -1,0 +1,636 @@
+<?php
+/**
+ * @file
+ * Code for the CWRC Projects feature.
+ */
+
+include_once 'cwrc_projects.features.inc';
+
+define('CWRC_PROJECTS_COLLECTION_PID_FIELD', 'field_top_level_collection');
+define('CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD', 'field_research_space');
+
+/**
+ * Implements hook_menu().
+ */
+function cwrc_projects_menu() {
+  $items = array();
+  $items['user/my-research-space'] = array(
+    'title' => 'My research space',
+    'page callback' => '_cwrc_projects_goto_research_space',
+    'access callback' => 'user_is_logged_in',
+    'menu_name' => 'user-menu',
+  );
+  $items['user/my-dashboard'] = array(
+    'title' => 'My dashboard',
+    'page callback' => '_cwrc_projects_goto_dashboard',
+    'access callback' => 'user_is_logged_in',
+    'menu_name' => 'user-menu',
+  );
+  return $items;
+}
+
+function _cwrc_projects_goto_research_space() {
+  global $user;
+  $wrapper = entity_metadata_wrapper('user', $user);
+  $pid = $wrapper->{CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD}->value()->id;
+  drupal_goto('islandora/object/' . $pid);
+}
+
+function _cwrc_projects_goto_dashboard() {
+  global $user;
+  drupal_goto('user/' . $user->uid . '/dashboard');
+}
+
+/**
+ * Implements hook_node_presave().
+ *
+ * When a project is saved this will create the new top-level collection for the
+ * created project with all the appropriate permissions.
+ *
+ * This happens during presave to allow field values to be altered before saving
+ * to the database occurs.
+ *
+ * XACML policies, in turn, are created on hook_node_insert to allow the global
+ * roles to be created (which are required for the XACML policies).
+ */
+function cwrc_projects_node_presave($node) {
+  if ($node->type == 'project') {
+    global $user;
+
+    // wrap the node
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    // get the connection and repository
+    $connection = islandora_get_tuque_connection($user);
+    $repository = $connection->repository;
+
+    // for new nodes we need to create the collection for this project
+    if ($node->is_new) {
+
+      // select appropriate pid based on title
+      $pid = 'cwrc:' . uuid_generate();
+
+      // create new fedora object with this pid
+      $object = $repository->constructObject($pid);
+
+      // set label, cmodel and parent
+      $object->label = $node->title;
+      $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
+      $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+      // build default collection policy
+      module_load_include('inc', 'islandora', 'includes/utilities');
+      $policy = new CollectionPolicy('
+        <collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
+          <content_models></content_models>
+          <search_terms></search_terms>
+          <staging_area></staging_area>
+          <relationship>isMemberOfCollection</relationship>
+        </collection_policy>');
+
+      // allow all content models in this collection by default
+      foreach(islandora_get_content_models() as $model) {
+        $policy->addContentModel($model['pid'], $model['label'], 'cwrc');
+      }
+
+      // create collection policy datastream and populate
+      $datastream = $object->constructDatastream('COLLECTION_POLICY', 'X');
+      $datastream->setContentFromString($policy->getXML());
+      $object->ingestDatastream($datastream);
+
+      // ingest the object
+      $repository->ingestObject($object);
+
+      // Save object reference in a field on this node.
+      $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->set($object);
+
+    // in other cases we only need to change the label
+    } else {
+
+      // Get the islandora object using entity API and change the label.
+      $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
+      $object->label = $node->title;
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function cwrc_projects_entity_insert($entity, $type) {
+  if ($type == 'node' && $entity->type == 'project') {
+    global $user;
+
+    // wrap the node
+    $wrapper = entity_metadata_wrapper('node', $entity);
+
+    // get the connection and repository
+    $connection = islandora_get_tuque_connection($user);
+    $repository = $connection->repository;
+
+    // Get the islandora object using entity API.
+    $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
+
+    // determine correct global role
+    $og_roles = og_roles($wrapper->type(), $wrapper->getBundle(), $wrapper->getIdentifier());
+    $rid = array_search('member', $og_roles);
+    $og_role = new stdClass;
+    $og_role->rid = $rid;
+    $og_role->group_type = $wrapper->type();
+    $global_role = _og_global_roles_get_global_role($og_role, $wrapper->getIdentifier());
+
+    // now create default XACML policies
+    $xacml = new IslandoraXacml($object);
+    $xacml->managementRule->addUser($wrapper->author->name->value());
+    $xacml->managementRule->addRole($global_role->name);
+    $datastream = $object->constructDatastream('POLICY', 'X');
+    $datastream->setContentFromString($xacml->getXmlString());
+    $object->ingestDatastream($datastream);
+
+    // Set up OG menu links
+    $plid = og_menu_single_get_link_mlid($type, $entity->nid);
+    $home_item = array(
+      'link_path' => drupal_get_normal_path('node/' . $entity->nid),
+      'link_title' => 'Home',
+      'menu_name' => 'og-menu-single',
+      'weight' => 0,
+      'plid' => $plid,
+    );
+    $collection_item = array(
+      'link_path' => drupal_get_normal_path('islandora/object/' . $object->id),
+      'link_title' => 'Collection',
+      'menu_name' => 'og-menu-single',
+      'weight' => 1,
+      'plid' => $plid,
+    );
+    menu_link_save($home_item);
+    menu_link_save($collection_item);
+
+    // set status alerting user of new collection
+    drupal_set_message(t('Thank you for creating a project on CWRC.  We have created a collection for your project <a href="!link" alt="collection link">here</a>, you may want to edit the collection and ensure the XACML and collection policies are correct, we have set some reasonable defaults for you.', array('!link' => url('islandora/object/' . $object->id))), 'status', TRUE);
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Ensures that our entity_insert hook runs absolutely last.
+ */
+function cwrc_projects_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'entity_insert') {
+    $group = $implementations['cwrc_projects'];
+    unset($implementations['cwrc_projects']);
+    $implementations['cwrc_projects'] = $group;
+  }
+  if ($hook == 'form_alter') {
+    $group = $implementations['cwrc_projects'];
+    unset($implementations['cwrc_projects']);
+    $implementations['cwrc_projects'] = $group;
+  }
+}
+
+/**
+ * Helper function to determine the parent project for a given PID.
+ *
+ * Will search for ancestors using the solr index if none are provided.
+ *
+ * Returns the project node if found and false if no parent project is found
+ * (or more than one parent project is found).
+ */
+function _cwrc_projects_get_project($pid, $ancestors = null) {
+  if ($ancestors === null) {
+    $ancestors = array();
+
+    // Get solarium client.
+    $client = cwrc_dashboards_get_solarium();
+
+    // Build select query determining ancestry.
+    $query = $client->createSelect();
+    $query->setQuery('PID:"' . $pid . '"')
+      ->setFields(array("ancestors_ms"))
+      ->addSort('workflow_date_current_dt', $query::SORT_DESC)
+      ->setRows(1);
+
+    // Get query results.
+    $results = $client->select($query);
+
+    // Set the new ancestors.
+    if ($results->getNumFound() > 0) {
+      $ancestors = $results->getDocuments()[0]['ancestors_ms'];
+    }
+  }
+
+  // Add this pid to the ancestors list.
+  $ancestors[] = $pid;
+
+  // query for the object
+  $query = db_select('node', 'n');
+  $query->fields('n', array('nid'));
+  $query->join('field_data_' . CWRC_PROJECTS_COLLECTION_PID_FIELD, 'fc', 'fc.entity_type = :node AND fc.entity_id = n.nid', array(':node' => 'node'));
+  $query->condition('n.status', 1);
+  $query->condition('fc.' . CWRC_PROJECTS_COLLECTION_PID_FIELD . '_pid', $ancestors, 'IN');
+  $result = $query->execute();
+
+  if ($result->rowCount() == 1) {
+    return node_load($result->fetchField());
+  }
+
+  return false;
+}
+
+/**
+ * Helper function to determine if the passed PID or Islandora object is the
+ * top-level collection for a project or not.
+ */
+function _cwrc_projects_is_project($pid) {
+  if (is_object($pid)) {
+    $pid = $pid->id;
+  }
+
+  return (bool) db_select('field_data_' . CWRC_PROJECTS_COLLECTION_PID_FIELD, 'pid')
+    ->condition(CWRC_PROJECTS_COLLECTION_PID_FIELD . '_pid', $pid)
+    ->fields('pid', array(CWRC_PROJECTS_COLLECTION_PID_FIELD . '_pid'))
+    ->execute()
+    ->fetchField();
+}
+
+/**
+ * Helper function to determine if the passed PID or Islandora object is the
+ * top-level collection for a research space or not.
+ */
+function _cwrc_projects_is_research_space($pid) {
+  if (is_object($pid)) {
+    $pid = $pid->id;
+  }
+
+  return (bool) db_select('field_data_' . CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD, 'pid')
+    ->condition(CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD . '_pid', $pid)
+    ->fields('pid', array(CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD . '_pid'))
+    ->execute()
+    ->fetchField();
+}
+
+/**
+ * Implements hook_user_presave().
+ *
+ * Creates this users "research space".
+ */
+function cwrc_projects_user_presave(&$edit, $account, $category) {
+  if ($account->is_new) {
+    // get the connection and repository
+    $super_user = user_load(1);
+    $connection = islandora_get_tuque_connection($super_user);
+    $repository = $connection->repository;
+
+    // Generate a PID.
+    $pid = 'cwrc:' . uuid_generate();
+
+    // create new fedora object with this pid
+    $object = $repository->constructObject($pid);
+
+    // Set label, owner, cmodel and parent
+    $object->label = $account->field_full_name[LANGUAGE_NONE][0]['value'] . "'s Research Space";
+    $object->owner = $account->name;
+    $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
+    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'cwrc:research_spaces');
+
+    // build default collection policy
+    module_load_include('inc', 'islandora', 'includes/utilities');
+    $policy = new CollectionPolicy('
+    <collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
+    <content_models></content_models>
+    <search_terms></search_terms>
+    <staging_area></staging_area>
+    <relationship>isMemberOfCollection</relationship>
+    </collection_policy>');
+
+    // allow all content models in this collection by default
+    foreach(islandora_get_content_models() as $model) {
+      $policy->addContentModel($model['pid'], $model['label'], 'cwrc');
+    }
+
+    // create collection policy datastream and populate
+    $datastream = $object->constructDatastream('COLLECTION_POLICY', 'X');
+    $datastream->setContentFromString($policy->getXML());
+    $object->ingestDatastream($datastream);
+
+    // now create default XACML policies
+    $admin_role = user_role_load(variable_get('user_admin_role'));
+    $xacml = new IslandoraXacml($object);
+    $xacml->managementRule->addUser($account->name);
+    $xacml->managementRule->addUser($super_user->name);
+    $xacml->managementRule->addRole($admin_role->name);
+    $xacml->viewingRule->addUser($account->name);
+    $xacml->viewingRule->addUser($super_user->name);
+    $xacml->viewingRule->addRole($admin_role->name);
+    $datastream = $object->constructDatastream('POLICY', 'X');
+    $datastream->setContentFromString($xacml->getXmlString());
+    $object->ingestDatastream($datastream);
+
+    // ingest the object
+    $repository->ingestObject($object);
+
+    // Store the object on the user profile for later.
+    $edit[CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD]['und'][0]['pid'] = $object->id;
+  }
+}
+
+/**
+ * Implements hook_islandora_required_objects().
+ *
+ * Installs the "CWRC Research Spaces" collection with restrictive XACML
+ * policies in place.
+ */
+function cwrc_projects_islandora_required_objects(IslandoraTuque $connection) {
+  // Research spaces collection.
+  $object = $connection->repository->constructObject('cwrc:research_spaces');
+  $object->owner = 'fedoraAdmin';
+  $object->label = 'CWRC Research Spaces';
+  $object->models = 'islandora:collectionCModel';
+  $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  // Build default collection policy.
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $policy = new CollectionPolicy('
+    <collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
+      <content_models></content_models>
+      <search_terms></search_terms>
+      <staging_area></staging_area>
+      <relationship>isMemberOfCollection</relationship>
+    </collection_policy>');
+  $policy->addContentModel('islandora:collectionCModel', 'Islandora Collection Content Model', 'cwrc');
+  $datastream = $object->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->setContentFromString($policy->getXML());
+  $object->ingestDatastream($datastream);
+
+  // Default XACML rules.
+  $account = user_load(1);
+  $wrapper = entity_metadata_wrapper('user', $account);
+  $xacml = new IslandoraXacml($object);
+  $xacml->managementRule->addUser($wrapper->name->value());
+  $xacml->managementRule->addRole(user_role_load(variable_get('user_admin_role'))->name);
+  $xacml->viewingRule->addUser($wrapper->name->value());
+  $xacml->viewingRule->addRole('administrator');
+  $datastream = $object->constructDatastream('POLICY', 'X');
+  $datastream->setContentFromString($xacml->getXmlString());
+  $object->ingestDatastream($datastream);
+
+  return array(
+    'cwrc_projects' => array(
+      'title' => 'CWRC Projects',
+      'objects' => array(
+        $object,
+      ),
+    ),
+  );
+}
+
+/**
+ * Provides a custom og context negotiator to allow custom blocks and views
+ * within the repository.
+ */
+function cwrc_projects_og_context_negotiation_info() {
+  $providers = array();
+  $providers['cwrc_projects'] = array(
+    'name' => t('CWRC Parent Project (Repository)'),
+    'description' => t('Detects parent project and sets context when browsing the Islandora Repository.'),
+    'callback' => 'cwrc_projects_og_context_handler',
+    'menu path' => array('islandora/object/%'),
+  );
+  $providers['cwrc_projects_search'] = array(
+    'name' => t('CWRC Parent Project (Search)'),
+    'description' => t('Detectst parent project and sets context when searching based on active facets.'),
+    'callback' => 'cwrc_projects_og_context_handler_search',
+    'menu path' => array(
+      'islandora/search/%',
+      'islandora/search',
+    ),
+  );
+  return $providers;
+}
+
+/**
+ * OG context negotiation callback.
+ *
+ * Sets OG context based on repository.
+ */
+function cwrc_projects_og_context_handler() {
+  if ($object = menu_get_object('islandora_object', 2)) {
+    if ($project = _cwrc_projects_get_project($object->id)) {
+      return array(
+        'node' => array($project->nid),
+      );
+    }
+  }
+}
+
+/**
+ * OG context negotiation callback.
+ *
+ * Sets OG context based on search facets.
+ */
+function cwrc_projects_og_context_handler_search() {
+  $parameters = drupal_get_query_parameters();
+  if (isset($parameters['f'])) {
+    // Filter down to ancestors facet items only.
+    $facets = array_filter($parameters['f'], function ($v) {
+      return (substr($v, 0, 13) == 'ancestors_ms:');
+    });
+
+    // Un-escape and un-prefix facets.
+    array_walk($facets, function(&$v, $k) {
+      $v = stripslashes(substr($v, 14, strlen($v) - 15));
+    });
+
+    $project = null;
+    foreach ($facets as $pid) {
+      // Check if PID is a project.
+      if ($project === null
+        && _cwrc_projects_is_project($pid)) {
+        $project = _cwrc_projects_get_project($pid);
+
+      // More than one project facet is active, return nothing.
+      } else if ($project !== null
+        && _cwrc_projects_is_project($pid)) {
+        return null;
+      }
+    }
+
+    // Return the matching project for context.
+    if ($project !== null) {
+      return array(
+        'node' => array($project->nid),
+      );
+    }
+  }
+}
+
+/**
+ * Implementation of hook_preprocess_menu_block_wrapper().
+ *
+ * Alters the menu block for the toolbar menu and embeds the project listing
+ * view in the correct place.
+ *
+ * Since there is no machine name or uuid for menu blocks we are resorting to
+ * a dirty hack to detect the correct block to alter here, if the user menu is
+ * ever needed in another menu block we need to find another way.
+ */
+function cwrc_projects_preprocess_menu_block_wrapper(&$variables) {
+  global $user;
+  if ($user->uid > 0 && $variables['config']['menu_name'] == 'user-menu') {
+    $count = 0;
+    foreach ($variables['content'] as $key => &$value) {
+      if (substr($key, 0, 1) != '#' && is_array($value)) {
+        $value['#weight'] = $count;
+        $count += 2;
+      }
+    }
+
+    // Embed project view in menu block
+    $variables['content']['projects'] = array(
+      '#prefix' => '<li class="leaf dropdown-header">' . t('Project dashboards') . '</li>',
+      '#markup' => views_embed_view('my_projects', 'user_menu_block'),
+      '#weight' => 3,
+    );
+
+    uasort($variables['content'], 'element_sort');
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function cwrc_projects_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if ($router_item['page_callback'] == "islandora_view_object") {
+    $obj = menu_get_object('islandora_object', 2);
+    if ($obj && islandora_basic_collection_ingest_access($obj)) {
+      if (in_array("islandora:collectionCModel", $obj->models)) {
+        // "Add an object" link
+        $data['actions'] = array(
+          'count' => 1,
+          'output' => array(
+            0 => array(
+              '#theme' => 'menu_local_action',
+              '#link' => array(
+                'path' => 'islandora/object/%/manage/overview/ingest',
+                'title' => t('Add an object to this Collection'),
+                'href' => $router_item['href'] . '/manage/overview/ingest',
+              ),
+            ),
+          ),
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_preprocess_html().
+ */
+function cwrc_projects_preprocess_html(&$variables) {
+  if ($gid = og_context_determine_context('node')) {
+    $wrapper = entity_metadata_wrapper('node', entity_load_single('node', $gid));
+    $variables['classes_array'][] = drupal_clean_css_identifier('cwrc-project-theme-' . $wrapper->field_theme->value());
+  }
+
+  $menu = menu_get_item();
+  if ($menu['path'] == 'node/%') {
+    $node = menu_get_object();
+    if ($node->type == 'project') {
+      $variables['classes_array'][] = 'cwrc-project-homepage';
+    }
+  }
+}
+
+/**
+ * Implementation of hook_block_info().
+ */
+function cwrc_projects_block_info() {
+  $blocks['project_group_join'] = array(
+    'info' => t('CWRC Project Group Join Form'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function cwrc_projects_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'project_group_join':
+      $block['subject'] = t('Join Group');
+      $block['content'] = _cwrc_projects_join_block();
+      break;
+  }
+  return $block;
+}
+
+function _cwrc_projects_join_block() {
+  global $user;
+
+  // Required for the form callback
+  module_load_include('inc', 'og_ui', 'og_ui.pages');
+
+  if (!user_is_logged_in()) return;
+  $node = og_context('node');
+  if (!$node || empty($node)) return;
+
+  // Reject active and blocked users with no message
+  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_ACTIVE, OG_STATE_BLOCKED))) return;
+
+  // Some feedback for people who apply
+  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_PENDING))) return t("Your group subscription is pending approval.");
+
+  // They must be allowed to join the group
+  if (!og_user_access('node', $node['gid'], 'subscribe', $user) && !og_user_access('node', $node['gid'], 'subscribe without approval', $user)) return;
+
+  // We have to grab the title because the `og_ui_confirm_subscribe` form changes the page title
+  $title = drupal_get_title();
+  $form = drupal_get_form('og_ui_confirm_subscribe', 'node', $node['gid'], $user, 'og_user_node2');
+  drupal_set_title($title);
+
+  return $form;
+}
+
+/**
+ * Implementation of hook_form_page_node_form_alter().
+ *
+ * Filters the available menu options to only the current groups menu.
+ */
+function cwrc_projects_form_node_form_alter(&$form, $form_state) {
+  $default = $form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value'];
+  if (!empty($default)) {
+
+    // Get form and valid links.
+    $menu_form =& $form['menu'];
+    $link = array('link' => og_menu_single_menu_link_load(og_menu_single_get_active_plid()));
+    $link['below'] = og_menu_single_children_items($link['link']['mlid']);
+    $default = $link['link']['menu_name'] . ':' . $link['link']['mlid'];
+    $valid = _cwrc_projects_flatten_menu(array($link));
+
+    // Set defaults and filter options.
+    $menu_form['link']['parent']['#default_value'] = $default;
+    foreach ($menu_form['link']['parent']['#options'] as $key => $value) {
+      if (!in_array($key, $valid)) {
+        unset($menu_form['link']['parent']['#options'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Helper function that flattens a nested array of menu links.
+ */
+function _cwrc_projects_flatten_menu($links) {
+  $return = array();
+  foreach ($links as $link) {
+    $valid = $link['link']['menu_name'] . ':' . $link['link']['mlid'];
+    $return[$valid] = $valid;
+    if (isset($link['below']) && !empty($link['below'])) {
+      $return = array_merge($return, _cwrc_projects_flatten_menu($link['below']));
+    }
+  }
+  return $return;
+}
