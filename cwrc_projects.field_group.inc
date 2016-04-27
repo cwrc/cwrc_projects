@@ -23,10 +23,11 @@ function cwrc_projects_field_group_info() {
     'label' => 'Advanced (all languages)',
     'weight' => '6',
     'children' => array(
-      0 => 'group_group',
-      1 => 'og_roles_permissions',
+      0 => 'field_object_lock_duration',
+      1 => 'field_search_string',
       2 => 'field_top_level_collection',
-      3 => 'field_search_string',
+      3 => 'group_group',
+      4 => 'og_roles_permissions',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -54,11 +55,11 @@ function cwrc_projects_field_group_info() {
     'label' => 'Basic Information',
     'weight' => '0',
     'children' => array(
-      0 => 'title_field',
-      1 => 'body',
-      2 => 'field_acknowledgements',
-      3 => 'language',
-      4 => 'field_project_intro',
+      0 => 'body',
+      1 => 'field_acknowledgements',
+      2 => 'field_project_intro',
+      3 => 'title_field',
+      4 => 'language',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
@@ -86,9 +87,9 @@ function cwrc_projects_field_group_info() {
     'label' => 'Contact',
     'weight' => '2',
     'children' => array(
-      0 => 'field_phone_number',
+      0 => 'field_copyrights',
       1 => 'field_email_address',
-      2 => 'field_copyrights',
+      2 => 'field_phone_number',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
@@ -114,7 +115,7 @@ function cwrc_projects_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Connect with Us',
-    'weight' => '11',
+    'weight' => '12',
     'children' => array(
       0 => 'field_copyrights',
       1 => 'field_email_address',
@@ -150,9 +151,11 @@ function cwrc_projects_field_group_info() {
     'label' => 'Featured content',
     'weight' => '4',
     'children' => array(
-      0 => 'field_featured_objects',
-      1 => 'field_featured_links',
+      0 => 'field_featured_links',
+      1 => 'field_featured_objects',
       2 => 'field_related_projects',
+      3 => 'field_thumbnail_image',
+      4 => 'field_project_categories',
     ),
     'format_type' => 'fieldset',
     'format_settings' => array(
@@ -208,8 +211,8 @@ function cwrc_projects_field_group_info() {
     'label' => 'Identity and Social Media',
     'weight' => '1',
     'children' => array(
-      0 => 'field_logo',
-      1 => 'field_banner_image',
+      0 => 'field_banner_image',
+      1 => 'field_logo',
       2 => 'field_social_links',
     ),
     'format_type' => 'fieldset',

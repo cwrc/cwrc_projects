@@ -87,11 +87,41 @@ function cwrc_projects_image_default_styles() {
   $styles['featured_object_image'] = array(
     'label' => 'Featured Object Image',
     'effects' => array(
-      2 => array(
+      7 => array(
         'name' => 'image_scale_and_crop',
         'data' => array(
-          'width' => 145,
-          'height' => 105,
+          'width' => 245,
+          'height' => 325,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: featured_project_carousel_image.
+  $styles['featured_project_carousel_image'] = array(
+    'label' => 'Featured Project Carousel Image',
+    'effects' => array(
+      1 => array(
+        'name' => 'image_scale_and_crop',
+        'data' => array(
+          'width' => 266,
+          'height' => 188,
+        ),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  // Exported image style: project_overview_grid_item.
+  $styles['project_overview_grid_item'] = array(
+    'label' => 'Project overview grid item',
+    'effects' => array(
+      1 => array(
+        'name' => 'image_scale_and_crop',
+        'data' => array(
+          'width' => 602,
+          'height' => 444,
         ),
         'weight' => 1,
       ),

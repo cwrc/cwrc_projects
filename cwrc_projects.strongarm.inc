@@ -102,6 +102,9 @@ function cwrc_projects_strongarm() {
       'revision' => array(
         'custom_settings' => FALSE,
       ),
+      'project_overview_grid_item' => array(
+        'custom_settings' => TRUE,
+      ),
     ),
     'extra_fields' => array(
       'form' => array(
@@ -113,6 +116,9 @@ function cwrc_projects_strongarm() {
         ),
         'language' => array(
           'weight' => '0',
+        ),
+        'redirect' => array(
+          'weight' => '30',
         ),
       ),
       'display' => array(),
@@ -222,7 +228,7 @@ function cwrc_projects_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'menu_block_8_follow';
-  $strongarm->value = 0;
+  $strongarm->value = 'active';
   $export['menu_block_8_follow'] = $strongarm;
 
   $strongarm = new stdClass();
@@ -243,7 +249,7 @@ function cwrc_projects_strongarm() {
   $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
   $strongarm->api_version = 1;
   $strongarm->name = 'menu_block_8_sort';
-  $strongarm->value = 0;
+  $strongarm->value = 1;
   $export['menu_block_8_sort'] = $strongarm;
 
   $strongarm = new stdClass();
