@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Code for the CWRC Projects feature.
@@ -31,56 +30,46 @@ function cwrc_projects_menu() {
     'access callback' => 'user_is_logged_in',
     'menu_name' => 'user-menu',
   );
-  $items['islandora/object/%islandora_object/my-dashboard'] = array(
-    'title' => 'My dashboard',
-    'page callback' => '_cwrc_projects_goto_dashboard',
-    'access callback' => 'user_is_logged_in',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 3,
-  );
   return $items;
 }
 
 /**
  * Implements hook_node_presave().
- *
- * When a project is saved this will create the new top-level collection for the
- * created project with all the appropriate permissions.
- *
- * This happens during presave to allow field values to be altered before saving
- * to the database occurs.
- *
- * XACML policies, in turn, are created on hook_node_insert to allow the global
- * roles to be created (which are required for the XACML policies).
  */
 function cwrc_projects_node_presave($node) {
+  // When a project is saved this will create the new top-level collection for
+  // the created project with all the appropriate permissions.
+  //
+  // This happens during presave to allow field values to be altered before
+  // saving to the database occurs.
+  // XACML policies, in turn, are created on hook_node_insert to allow the
+  // global roles to be created (which are required for the XACML policies).
   global $language;
-
   if ($node->type == 'project') {
     global $user;
 
-    // Wrap the node.
+    // wrap the node
     $wrapper = entity_metadata_wrapper('node', $node);
 
-    // Get the connection and repository.
+    // get the connection and repository
     $connection = islandora_get_tuque_connection($user);
     $repository = $connection->repository;
 
-    // For new nodes we need to create the collection for this project.
+    // for new nodes we need to create the collection for this project
     if ($node->is_new) {
 
-      // Select appropriate pid based on title.
+      // select appropriate pid based on title
       $pid = 'cwrc:' . uuid_generate();
 
-      // Create new fedora object with this pid.
+      // create new fedora object with this pid
       $object = $repository->constructObject($pid);
 
-      // Set label, cmodel and parent.
+      // set label, cmodel and parent
       $object->label = $node->title;
       $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
       $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
 
-      // Build default collection policy.
+      // build default collection policy
       module_load_include('inc', 'islandora', 'includes/utilities');
       $policy = new CollectionPolicy('
         <collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
@@ -90,41 +79,40 @@ function cwrc_projects_node_presave($node) {
           <relationship>isMemberOfCollection</relationship>
         </collection_policy>');
 
-      // Allow all content models in this collection by default.
-      foreach (islandora_get_content_models() as $model) {
+      // allow all content models in this collection by default
+      foreach(islandora_get_content_models() as $model) {
         $policy->addContentModel($model['pid'], $model['label'], 'cwrc');
       }
 
-      // Create collection policy datastream and populate.
+      // create collection policy datastream and populate
       $datastream = $object->constructDatastream('COLLECTION_POLICY', 'X');
       $datastream->setContentFromString($policy->getXML());
       $object->ingestDatastream($datastream);
 
-      // Ingest the object.
+      // ingest the object
       $repository->ingestObject($object);
 
       // Save object reference in a field on this node.
       $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->set($object);
 
-      // Save the object lock duration on new nodes.
-      $object_lock_duration = (int) $node->field_object_lock_duration[LANGUAGE_NONE][0]['value'];
-      $global_duration = (int) variable_get('islandora_object_lock_duration', 30);
+      // Save the object lock duration on new nodes
+      $object_lock_duration = (int)$node->field_object_lock_duration[LANGUAGE_NONE][0]['value'];
+      $global_duration = (int)variable_get('islandora_object_lock_duration', 30);
       if ($object_lock_duration != $global_duration && $object_lock_duration > 0) {
-        // Set the duration.
+        // Set the duration
         module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
         islandora_object_lock_length_add_collection_lock($pid, $object_lock_duration);
       }
 
-    }
-    // In other cases we only need to change the label.
-    else {
+      // in other cases we only need to change the label
+    } else {
 
       // Get the islandora object using entity API and change the label.
       $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
       $object->label = $node->title;
     }
 
-    // We want to force some text formats here.
+    // we want to force some text formats here
     $node->field_project_intro[$language->language][0]['format'] = 'filtered_html';
   }
 }
@@ -143,21 +131,27 @@ function cwrc_projects_entity_presave($entity, $type) {
  */
 function cwrc_projects_entity_insert($entity, $type) {
   if ($type == 'node' && $entity->type == 'project') {
-    // Wrap the node.
+    global $user;
+
+    // wrap the node
     $wrapper = entity_metadata_wrapper('node', $entity);
+
+    // get the connection and repository
+    $connection = islandora_get_tuque_connection($user);
+    $repository = $connection->repository;
 
     // Get the islandora object using entity API.
     $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
 
-    // Determine correct global role.
+    // determine correct global role
     $og_roles = og_roles($wrapper->type(), $wrapper->getBundle(), $wrapper->getIdentifier());
     $rid = array_search('member', $og_roles);
-    $og_role = new stdClass();
+    $og_role = new stdClass;
     $og_role->rid = $rid;
     $og_role->group_type = $wrapper->type();
     $global_role = _og_global_roles_get_global_role($og_role, $wrapper->getIdentifier());
 
-    // Now create default XACML policies.
+    // now create default XACML policies
     $xacml = new IslandoraXacml($object);
     $xacml->managementRule->addUser($wrapper->author->name->value());
     $xacml->managementRule->addRole($global_role->name);
@@ -165,7 +159,7 @@ function cwrc_projects_entity_insert($entity, $type) {
     $datastream->setContentFromString($xacml->getXmlString());
     $object->ingestDatastream($datastream);
 
-    // Set up OG menu links.
+    // Set up OG menu links
     $plid = og_menu_single_get_link_mlid($type, $entity->nid);
     $home_item = array(
       'link_path' => drupal_get_normal_path('node/' . $entity->nid),
@@ -184,17 +178,16 @@ function cwrc_projects_entity_insert($entity, $type) {
     menu_link_save($home_item);
     menu_link_save($collection_item);
 
-    // Set status alerting user of new collection.
+    // set status alerting user of new collection
     drupal_set_message(t('Thank you for creating a project on CWRC. We have created a collection for your project <a href="!link" alt="collection link">here</a>. You may want to edit the collection and <a href="!xacml">ensure the XACML and collection policies are correct</a>; we have set some reasonable defaults for you.', array('!link' => url('islandora/object/' . $object->id), '!xacml' => url('islandora/object/' . $object->id . '/manage/xacml'))), 'status', TRUE);
   }
 }
 
 /**
  * Implements hook_module_implements_alter().
- *
- * Ensures that our entity_insert hook runs absolutely last.
  */
 function cwrc_projects_module_implements_alter(&$implementations, $hook) {
+  // Ensures that our entity_insert hook runs absolutely last.
   if ($hook == 'entity_insert') {
     $group = $implementations['cwrc_projects'];
     unset($implementations['cwrc_projects']);
@@ -221,7 +214,7 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
   // active and they don't already have a research space.
   if (_cwrc_projects_is_user_being_activated($old_account, $edit)
     && !_cwrc_projects_user_has_research_space($old_account)) {
-    // Get the connection and repository.
+    // get the connection and repository
     $super_user = user_load(1);
     $connection = islandora_get_tuque_connection($super_user);
     $repository = $connection->repository;
@@ -229,16 +222,16 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
     // Generate a PID.
     $pid = 'cwrc:' . uuid_generate();
 
-    // Create new fedora object with this pid.
+    // create new fedora object with this pid
     $object = $repository->constructObject($pid);
 
-    // Set label, owner, cmodel and parent.
+    // Set label, owner, cmodel and parent
     $object->label = $account->field_full_name[LANGUAGE_NONE][0]['value'] . "'s Research Space";
     $object->owner = $account->name;
     $object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'cwrc:research_spaces');
 
-    // Build default collection policy.
+    // build default collection policy
     module_load_include('inc', 'islandora', 'includes/utilities');
     $policy = new CollectionPolicy('
     <collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd">
@@ -248,17 +241,17 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
     <relationship>isMemberOfCollection</relationship>
     </collection_policy>');
 
-    // Allow all content models in this collection by default.
-    foreach (islandora_get_content_models() as $model) {
+    // allow all content models in this collection by default
+    foreach(islandora_get_content_models() as $model) {
       $policy->addContentModel($model['pid'], $model['label'], 'cwrc');
     }
 
-    // Create collection policy datastream and populate.
+    // create collection policy datastream and populate
     $datastream = $object->constructDatastream('COLLECTION_POLICY', 'X');
     $datastream->setContentFromString($policy->getXML());
     $object->ingestDatastream($datastream);
 
-    // Now create default XACML policies.
+    // now create default XACML policies
     $admin_role = user_role_load(variable_get('user_admin_role'));
     $xacml = new IslandoraXacml($object);
     $xacml->managementRule->addUser($account->name);
@@ -271,11 +264,11 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
     $datastream->setContentFromString($xacml->getXmlString());
     $object->ingestDatastream($datastream);
 
-    // Ingest the object.
+    // ingest the object
     $repository->ingestObject($object);
 
     // Store the object on the user profile for later.
-    $edit[CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD][LANGUAGE_NONE][0]['pid'] = $object->id;
+    $edit[CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD]['und'][0]['pid'] = $object->id;
 
     // Log that we created a research space.
     watchdog('cwrc_projects', 'Added a research space with PID @pid for user with username @username (UID @uid).', array(
@@ -288,11 +281,11 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
 
 /**
  * Implements hook_islandora_required_objects().
- *
- * Installs the "CWRC Research Spaces" collection with restrictive XACML
- * policies in place.
  */
 function cwrc_projects_islandora_required_objects(IslandoraTuque $connection) {
+  // Installs the "CWRC Research Spaces" collection with restrictive XACML
+  // policies in place.
+  //
   // Research spaces collection.
   $object = $connection->repository->constructObject('cwrc:research_spaces');
   $object->owner = 'fedoraAdmin';
@@ -337,36 +330,11 @@ function cwrc_projects_islandora_required_objects(IslandoraTuque $connection) {
 }
 
 /**
- * Implements hook_og_context_negotiation_info().
- */
-function cwrc_projects_og_context_negotiation_info() {
-  // Provides a custom og context negotiator to allow custom blocks and views
-  // within the repository.
-  $providers = array();
-  $providers['cwrc_projects'] = array(
-    'name' => t('CWRC Parent Project (Repository)'),
-    'description' => t('Detects parent project and sets context when browsing the Islandora Repository.'),
-    'callback' => 'cwrc_projects_og_context_handler',
-    'menu path' => array('islandora/object/%'),
-  );
-  $providers['cwrc_projects_search'] = array(
-    'name' => t('CWRC Parent Project (Search)'),
-    'description' => t('Detectst parent project and sets context when searching based on active facets.'),
-    'callback' => 'cwrc_projects_og_context_handler_search',
-    'menu path' => array(
-      'islandora/search/%',
-      'islandora/search',
-    ),
-  );
-  return $providers;
-}
-
-/**
  * Implements hook_preprocess_menu_block_wrapper().
  */
 function cwrc_projects_preprocess_menu_block_wrapper(&$variables) {
-  // Alters the menu block for the toolbar menu and embeds the project listing
-  // view in the correct place.
+  // Alters the menu block for the toolbar menu and embeds the project
+  // listing view in the correct place.
   //
   // Since there is no machine name or uuid for menu blocks we are resorting to
   // a dirty hack to detect the correct block to alter here, if the user menu is
@@ -381,7 +349,7 @@ function cwrc_projects_preprocess_menu_block_wrapper(&$variables) {
       }
     }
 
-    // Embed project view in menu block.
+    // Embed project view in menu block
     $variables['content']['projects'] = array(
       '#prefix' => '<li class="leaf dropdown-header">' . t('Project dashboards') . '</li>',
       '#suffix' => '<li class="separator"></li>',
@@ -401,7 +369,7 @@ function cwrc_projects_menu_local_tasks_alter(&$data, $router_item, $root_path) 
     $obj = menu_get_object('islandora_object', 2);
     if ($obj && islandora_basic_collection_ingest_access($obj)) {
       if (in_array("islandora:collectionCModel", $obj->models)) {
-        // "Add an object" link.
+        // "Add an object" link
         $data['actions'] = array(
           'count' => 1,
           'output' => array(
@@ -460,68 +428,15 @@ function cwrc_projects_block_view($delta = '') {
   $block = array();
   switch ($delta) {
     case 'project_group_join':
-      $block['subject'] = t('Request Membership');
+      $block['subject'] = t('Join Group');
       $block['content'] = _cwrc_projects_join_block();
       break;
-
     case 'project_context_logo':
       $block['subject'] = t('Project Logo');
       $block['content'] = _cwrc_projects_og_context_logo();
       break;
   }
   return $block;
-}
-
-/**
- * Implements hook_form_page_node_form_alter().
- */
-function cwrc_projects_form_node_form_alter(&$form, $form_state) {
-  // Filters the available menu options to only the current groups menu.
-  $default = isset($form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value']) ? $form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value'] : NULL;
-  if (!empty($default)) {
-
-    // Get form and valid links.
-    $menu_form =& $form['menu'];
-    $link = array('link' => og_menu_single_menu_link_load(og_menu_single_get_active_plid()));
-    $link['below'] = og_menu_single_children_items($link['link']['mlid']);
-    $default = $link['link']['menu_name'] . ':' . $link['link']['mlid'];
-    $valid = _cwrc_projects_flatten_menu(array($link));
-
-    // Set defaults and filter options.
-    $menu_form['link']['parent']['#default_value'] = $default;
-    foreach ($menu_form['link']['parent']['#options'] as $key => $value) {
-      if (!in_array($key, $valid)) {
-        unset($menu_form['link']['parent']['#options'][$key]);
-      }
-    }
-  }
-
-  if ($form['#bundle'] == "project") {
-    module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
-
-    $global_lock_length = variable_get('islandora_object_lock_duration', 30);
-
-    // If this isn't set, then we're making a new object.
-    if (isset($form['#node']->field_top_level_collection)) {
-      $pid = $form['#node']->field_top_level_collection[LANGUAGE_NONE][0]['pid'];
-      $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
-      $length = (isset($collection_lock->duration) ? $collection_lock->duration : $global_lock_length);
-    }
-    else {
-      $length = $global_lock_length;
-    }
-
-    // Set the value of the field to the actual object lock duration.
-    $form['#node']->field_object_lock_duration = array(
-      LANGUAGE_NONE => array(
-        0 => array(
-          'value' => $length,
-        ),
-      ),
-    );
-    $form['field_object_lock_duration'][LANGUAGE_NONE][0]['value']['#default_value'] = $length;
-    $form['actions']['submit']['#submit'][] = 'cwrc_projects_update_lock_duration';
-  }
 }
 
 /**
@@ -557,6 +472,57 @@ function cwrc_projects_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for the page_node_form form.
+ */
+function cwrc_projects_form_node_form_alter(&$form, $form_state) {
+  // Filters the available menu options to only the current groups menu.
+  $default = isset($form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value']) ? $form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value'] : null;
+  if (!empty($default)) {
+
+    // Get form and valid links.
+    $menu_form =& $form['menu'];
+    $link = array('link' => og_menu_single_menu_link_load(og_menu_single_get_active_plid()));
+    $link['below'] = og_menu_single_children_items($link['link']['mlid']);
+    $default = $link['link']['menu_name'] . ':' . $link['link']['mlid'];
+    $valid = _cwrc_projects_flatten_menu(array($link));
+
+    // Set defaults and filter options.
+    $menu_form['link']['parent']['#default_value'] = $default;
+    foreach ($menu_form['link']['parent']['#options'] as $key => $value) {
+      if (!in_array($key, $valid)) {
+        unset($menu_form['link']['parent']['#options'][$key]);
+      }
+    }
+  }
+
+  if ($form['#bundle'] == "project") {
+    module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
+
+    $global_lock_length = variable_get('islandora_object_lock_duration', 30);
+
+    // If this isn't set, then we're making a new object
+    if (isset($form['#node']->field_top_level_collection)) {
+      $pid = $form['#node']->field_top_level_collection[LANGUAGE_NONE][0]['pid'];
+      $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
+      $length = (isset($collection_lock->duration) ? $collection_lock->duration : $global_lock_length);
+    } else {
+      $length = $global_lock_length;
+    }
+
+    // Set the value of the field to the actual object lock duration
+    $form['#node']->field_object_lock_duration = array(
+      LANGUAGE_NONE => array(
+        0 => array(
+          'value' => $length,
+        ),
+      ),
+    );
+    $form['field_object_lock_duration'][LANGUAGE_NONE][0]['value']['#default_value'] = $length;
+    $form['actions']['submit']['#submit'][] = 'cwrc_projects_update_lock_duration';
+  }
+}
+
+/**
  * Implements hook_menu_block_tree_alter().
  */
 function cwrc_projects_menu_block_tree_alter(&$tree, $config) {
@@ -580,28 +546,58 @@ function cwrc_projects_menu_block_tree_alter(&$tree, $config) {
   }
 }
 
-/* Menu callbacks. */
-
 /**
- * Menu callback: Redirect the user to their own research space,.
- *
- * @see cwrc_projects_menu()
+ * Implements hook_og_context_negotiation_info().
  */
-function _cwrc_projects_goto_research_space() {
-  global $user;
-  $wrapper = entity_metadata_wrapper('user', $user);
-  $pid = $wrapper->{CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD}->value()->id;
-  drupal_goto('islandora/object/' . $pid);
+function cwrc_projects_og_context_negotiation_info() {
+  // Provides a custom og context negotiator to allow custom blocks and views
+  // within the repository.
+  $providers = array();
+  $providers['cwrc_projects'] = array(
+    'name' => t('CWRC Parent Project (Repository)'),
+    'description' => t('Detects parent project and sets context when browsing the Islandora Repository.'),
+    'callback' => 'cwrc_projects_og_context_handler',
+    'menu path' => array('islandora/object/%'),
+  );
+  $providers['cwrc_projects_search'] = array(
+    'name' => t('CWRC Parent Project (Search)'),
+    'description' => t('Detectst parent project and sets context when searching based on active facets.'),
+    'callback' => 'cwrc_projects_og_context_handler_search',
+    'menu path' => array(
+      'islandora/search/%',
+      'islandora/search',
+    ),
+  );
+  return $providers;
 }
 
+/* Form callbacks. */
+
 /**
- * Menu callback: Redirect the user to their own dashboard.
- *
- * @see cwrc_projects_menu()
+ * Callback for node edit form.
  */
-function _cwrc_projects_goto_dashboard() {
-  global $user;
-  drupal_goto('user/' . $user->uid . '/dashboard');
+function cwrc_projects_update_lock_duration(&$form, $form_state) {
+  module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
+  $length = (int)$form_state['values']['field_object_lock_duration'][LANGUAGE_NONE][0]['value'];
+  $pid = $form_state['values']['field_top_level_collection'][LANGUAGE_NONE][0]['pid'];
+  $default_length = variable_get('islandora_object_lock_duration', 30);
+  $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
+
+  if ($length > 0) {
+    if (isset($collection_lock->duration)) {
+      islandora_object_lock_length_remove_collection_lock($pid);
+    }
+    // Add the lock length.
+    islandora_object_lock_length_add_collection_lock($pid, $length);
+  } else {
+    // null, zero, or negative length = no lock (use default)
+    islandora_object_lock_length_remove_collection_lock($pid);
+  }
+
+  // If the lock exists and is just default, remove it
+  if (isset($collection_lock) && $length == $default_length) {
+    islandora_object_lock_length_remove_collection_lock($pid);
+  }
 }
 
 /* Organic groups callbacks. */
@@ -610,19 +606,20 @@ function _cwrc_projects_goto_dashboard() {
  * OG context negotiation callback.
  *
  * Sets OG context based on repository.
+ *
+ * @see cwrc_projects_og_context_negotiation_info()
  */
 function cwrc_projects_og_context_handler() {
   $object = menu_get_object('islandora_object', 2);
 
   if ($object == NULL) {
-    // NULL = access denied, while FALSE = no object.
+    // NULL = access denied, while FALSE = no object
     if ($su = user_load(1)) {
       if (IslandoraTuque::exists()) {
 
         try {
           $tuque = new IslandoraTuque($su, NULL);
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
           drupal_set_message(t('Unable to connect to the repository %e', array('%e' => $e)), 'error');
         }
 
@@ -630,8 +627,7 @@ function cwrc_projects_og_context_handler() {
 
           try {
             $object = $tuque->repository->getObject(urldecode(arg(2)));
-          }
-          catch (Exception $e) {
+          } catch (Exception $e) {
             if ($e->getCode() == '404') {
               $object = FALSE;
             }
@@ -658,6 +654,8 @@ function cwrc_projects_og_context_handler() {
  * OG context negotiation callback.
  *
  * Sets OG context based on search facets.
+ *
+ * @see cwrc_projects_og_context_negotiation_info()
  */
 function cwrc_projects_og_context_handler_search() {
   $parameters = drupal_get_query_parameters();
@@ -668,27 +666,26 @@ function cwrc_projects_og_context_handler_search() {
     });
 
     // Un-escape and un-prefix facets.
-    array_walk($facets, function (&$v, $k) {
+    array_walk($facets, function(&$v, $k) {
       $v = stripslashes(substr($v, 14, strlen($v) - 15));
     });
 
-    $project = NULL;
+    $project = null;
     foreach ($facets as $pid) {
       // Check if PID is a project.
-      if ($project === NULL
+      if ($project === null
         && _cwrc_projects_is_project($pid)) {
         $project = _cwrc_projects_get_project($pid);
 
         // More than one project facet is active, return nothing.
-      }
-      elseif ($project !== NULL
+      } else if ($project !== null
         && _cwrc_projects_is_project($pid)) {
-        return NULL;
+        return null;
       }
     }
 
     // Return the matching project for context.
-    if ($project !== NULL) {
+    if ($project !== null) {
       return array(
         'node' => array($project->nid),
       );
@@ -696,123 +693,43 @@ function cwrc_projects_og_context_handler_search() {
   }
 }
 
-/* Form-generating functions. */
+/* Theme preprocess functions. */
 
 /**
- * Form constructor for a block to apply to join a project.
+ * Prepares variables for Islandora Dublin Core display templates.
  *
- * @ingroup forms
- */
-function _cwrc_projects_join_block() {
-  global $user;
-
-  // Required for the form callback.
-  module_load_include('inc', 'og_ui', 'og_ui.pages');
-
-  if (!user_is_logged_in()) {
-    return;
-  }
-  $node = og_context('node');
-  if (!$node || empty($node)) {
-    return;
-  }
-
-  // Reject active and blocked users with no message.
-  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_ACTIVE, OG_STATE_BLOCKED))) {
-    return;
-  }
-
-  // Some feedback for people who apply.
-  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_PENDING))) {
-    return t("Your group subscription is pending approval.");
-  }
-
-  // They must be allowed to join the group.
-  if (!og_user_access('node', $node['gid'], 'subscribe', $user) && !og_user_access('node', $node['gid'], 'subscribe without approval', $user)) {
-    return;
-  }
-
-  // We have to grab the title because the `og_ui_confirm_subscribe` form
-  // changes the page title.
-  $title = drupal_get_title();
-  $form = drupal_get_form('og_ui_confirm_subscribe', 'node', $node['gid'], $user, 'og_user_node2');
-  drupal_set_title($title, PASS_THROUGH);
-
-  return $form;
-}
-
-/**
- * Form submission handler for node_form().
- *
- * @see cwrc_projects_form_node_form_alter()
- */
-function cwrc_projects_update_lock_duration(&$form, $form_state) {
-  module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
-  $length = (int) $form_state['values']['field_object_lock_duration'][LANGUAGE_NONE][0]['value'];
-  $pid = $form_state['values']['field_top_level_collection'][LANGUAGE_NONE][0]['pid'];
-  $default_length = variable_get('islandora_object_lock_duration', 30);
-  $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
-
-  if ($length > 0) {
-    if (isset($collection_lock->duration)) {
-      islandora_object_lock_length_remove_collection_lock($pid);
-    }
-    // Add the lock length.
-    islandora_object_lock_length_add_collection_lock($pid, $length);
-  }
-  else {
-    // null, zero, or negative length = no lock (use default)
-    islandora_object_lock_length_remove_collection_lock($pid);
-  }
-
-  // If the lock exists and is just default, remove it.
-  if (isset($collection_lock) && $length == $default_length) {
-    islandora_object_lock_length_remove_collection_lock($pid);
-  }
-}
-
-/* Theme functions. */
-
-/**
- * Prepares variables for rendering Dublin Core metadata.
+ * Default template: islandora-dublin-core-display.tpl.php.
  *
  * @param array &$variables
- *   An associative array of variables containing at least:
- *   - islandora_object: The islandora object to display data about.
+ *   An associative array containing:
+ *   - islandora_object: The Fedora / Islandora object whose metadata is to be
+ *     displayed.
+ *
+ * @see islandora_theme()
  */
 function cwrc_projects_preprocess_islandora_dublin_core_display(&$variables) {
   $variables['mods_redirect'] = _cwrc_projects_get_mods_redirect($variables['islandora_object']);
 }
 
+/* Helper functions. */
+
 /**
- * Returns HTML for a project's logo based on context.
+ * Helper function to issue a redirect to a user's research space.
  */
-function _cwrc_projects_og_context_logo() {
-  $ctx = og_context();
-  if (!empty($ctx)) {
-    $nid = $ctx['gid'];
-    $project_node = node_load($nid);
-    if (!$project_node) {
-      return;
-    }
-    if ($project_node->type != 'project') {
-      return;
-    }
-    if (empty($project_node->field_logo)) {
-      return;
-    }
-
-    $wrapper = entity_metadata_wrapper('node', $project_node);
-    $logo = $wrapper->field_logo->value();
-    if (!$logo) {
-      return;
-    }
-
-    return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
-  }
+function _cwrc_projects_goto_research_space() {
+  global $user;
+  $wrapper = entity_metadata_wrapper('user', $user);
+  $pid = $wrapper->{CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD}->value()->id;
+  drupal_goto('islandora/object/' . $pid);
 }
 
-/* Helper functions. */
+/**
+ * Helper function to issue a redirect to a user's dashboard.
+ */
+function _cwrc_projects_goto_dashboard() {
+  global $user;
+  drupal_goto('user/' . $user->uid . '/dashboard');
+}
 
 /**
  * Helper function to determine the parent project for a given PID.
@@ -822,8 +739,8 @@ function _cwrc_projects_og_context_logo() {
  * Returns the project node if found and false if no parent project is found
  * (or more than one parent project is found).
  */
-function _cwrc_projects_get_project($pid, $ancestors = NULL) {
-  if ($ancestors === NULL) {
+function _cwrc_projects_get_project($pid, $ancestors = null) {
+  if ($ancestors === null) {
     $ancestors = array();
 
     // Get solarium client.
@@ -848,7 +765,7 @@ function _cwrc_projects_get_project($pid, $ancestors = NULL) {
   // Add this pid to the ancestors list.
   $ancestors[] = $pid;
 
-  // Query for the object.
+  // query for the object
   $query = db_select('node', 'n');
   $query->fields('n', array('nid'));
   $query->join('field_data_' . CWRC_PROJECTS_COLLECTION_PID_FIELD, 'fc', 'fc.entity_type = :node AND fc.entity_id = n.nid', array(':node' => 'node'));
@@ -860,7 +777,7 @@ function _cwrc_projects_get_project($pid, $ancestors = NULL) {
     return node_load($result->fetchField());
   }
 
-  return FALSE;
+  return false;
 }
 
 /**
@@ -896,6 +813,72 @@ function _cwrc_projects_is_research_space($pid) {
 }
 
 /**
+ * Helper function to display a Join block if the user can join a project.
+ *
+ * @return array
+ *   A form array for a Join block.
+ */
+function _cwrc_projects_join_block() {
+  global $user;
+
+  // Required for the form callback
+  module_load_include('inc', 'og_ui', 'og_ui.pages');
+
+  if (!user_is_logged_in()) return;
+  $node = og_context('node');
+  if (!$node || empty($node)) return;
+
+  // Reject active and blocked users with no message
+  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_ACTIVE, OG_STATE_BLOCKED))) {
+    return;
+  }
+
+  // Some feedback for people who apply
+  if (og_is_member('node', $node['gid'], 'user', NULL, array(OG_STATE_PENDING))) {
+    return t("Your group subscription is pending approval.");
+  }
+
+  // They must be allowed to join the group
+  if (!og_user_access('node', $node['gid'], 'subscribe', $user) && !og_user_access('node', $node['gid'], 'subscribe without approval', $user)) {
+    return;
+  }
+
+  // We have to grab the title because the `og_ui_confirm_subscribe` form changes the page title
+  $title = drupal_get_title();
+  $form = drupal_get_form('og_ui_confirm_subscribe', 'node', $node['gid'], $user, 'og_user_node2');
+  drupal_set_title($title, PASS_THROUGH);
+
+  return $form;
+}
+
+/**
+ * Helper function to return HTML for a project logo.
+ *
+ * @return string|void
+ *   Returns an HTML string for a project logo if one exists, void otherwise.
+ */
+function _cwrc_projects_og_context_logo() {
+  global $language;
+
+  $ctx = og_context();
+  if (!empty($ctx)) {
+    $nid = $ctx['gid'];
+    $project_node = node_load($nid);
+    if (!$project_node) return;
+    if ($project_node->type != 'project') return;
+    if (empty($project_node->field_logo)) return;
+
+    $wrapper = entity_metadata_wrapper('node', $project_node);
+    $logo = $wrapper->field_logo->value();
+    if (!$logo) {
+      return;
+    }
+
+    return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
+  }
+}
+
+/**
  * Helper function that flattens a nested array of menu links.
  */
 function _cwrc_projects_flatten_menu($links) {
@@ -911,19 +894,20 @@ function _cwrc_projects_flatten_menu($links) {
 }
 
 /**
- * Helper function to get a MODS URL from a Fedora object.
+ * Helper function to return an object's MODS datastream if it exists.
  *
  * @param object $object
- *   The Fedora object to parse.
- *
+ *   A Fedora/Islandora object.
  * @return string|null
- *   The MODS URL for the object, or NULL if one cannot be found.
+ *   The MODS datastream for $object if it exists and is not empty; NULL
+ *   otherwise.
  */
 function _cwrc_projects_get_mods_redirect($object) {
   $mods = $object->getDatastream("MODS");
   if ($mods == NULL) {
     return NULL;
   }
+
   $content = $mods->content;
   if ($content == NULL || empty($content)) {
     return NULL;
@@ -943,10 +927,12 @@ function _cwrc_projects_get_mods_redirect($object) {
   if ($result == NULL) {
     return NULL;
   }
+
   $result = (string) $result;
   if (empty($result)) {
     return NULL;
   }
+
   return $result;
 }
 
