@@ -121,6 +121,7 @@ function cwrc_projects_og_features_default_permissions() {
   // Exported og permission: 'node:project:update group'
   $permissions['node:project:update group'] = array(
     'roles' => array(
+      'project contributor' => 'project contributor',
       'project editor' => 'project editor',
     ),
   );
