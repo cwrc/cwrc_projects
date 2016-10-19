@@ -1654,8 +1654,8 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
         'label' => 'hidden',
         'module' => 'image',
         'settings' => array(
-          'image_link' => 'content',
-          'image_style' => 'featured_object_image',
+          'image_link' => '',
+          'image_style' => 'featured_project_carousel_image',
         ),
         'type' => 'image',
         'weight' => -5,
