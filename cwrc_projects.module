@@ -443,22 +443,6 @@ function cwrc_projects_block_view($delta = '') {
 }
 
 /**
- * Implements hook_field_widget_WIDGET_TYPE_form_alter().
- */
-function cwrc_projects_field_widget_text_textarea_form_alter(&$element, &$form_state, $context) {
-  // Changes the Project Intro field, and Sidebar content fields to default to
-  // filtered html.
-  if (isset($element['#field_name']) && isset($element['#bundle'])) {
-    if ($element['#bundle'] == 'field_acknowledgements' && $element['#field_name'] == 'field_text') {
-      $element['#format'] = 'filtered_html';
-    }
-    if ($element['#field_name'] == 'field_project_intro') {
-      $element['#format'] = 'filtered_html';
-    }
-  }
-}
-
-/**
  * Implements hook_form_alter().
  */
 function cwrc_projects_form_alter(&$form, &$form_state, $form_id) {
@@ -578,31 +562,43 @@ function cwrc_projects_og_context_negotiation_info() {
 /* Form callbacks. */
 
 /**
- * Callback for node edit form.
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
  */
-function cwrc_projects_update_lock_duration(&$form, $form_state) {
-  module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
-  $length = (int) $form_state['values']['field_object_lock_duration'][LANGUAGE_NONE][0]['value'];
-  $pid = $form_state['values']['field_top_level_collection'][LANGUAGE_NONE][0]['pid'];
-  $default_length = variable_get('islandora_object_lock_duration', 30);
-  $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
-
-  if ($length > 0) {
-    if (isset($collection_lock->duration)) {
-      islandora_object_lock_length_remove_collection_lock($pid);
+function cwrc_projects_field_widget_text_textarea_form_alter(&$element, &$form_state, $context) {
+  // Changes the Project Intro field, and Sidebar content fields to default to
+  // filtered html.
+  if (isset($element['#field_name']) && isset($element['#bundle'])) {
+    if ($element['#bundle'] == 'field_acknowledgements' && $element['#field_name'] == 'field_text') {
+      $element['#format'] = 'filtered_html';
     }
-    // Add the lock length.
-    islandora_object_lock_length_add_collection_lock($pid, $length);
+    if ($element['#field_name'] == 'field_project_intro') {
+      $element['#format'] = 'filtered_html';
+    }
   }
-  else {
-    // null, zero, or negative length = no lock (use default)
-    islandora_object_lock_length_remove_collection_lock($pid);
-  }
+}
 
-  // If the lock exists and is just default, remove it.
-  if (isset($collection_lock) && $length == $default_length) {
-    islandora_object_lock_length_remove_collection_lock($pid);
-  }
+/* Menu callbacks. */
+
+/**
+ * Menu callback: Redirect the user to their own research space,.
+ *
+ * @see cwrc_projects_menu()
+ */
+function _cwrc_projects_goto_research_space() {
+  global $user;
+  $wrapper = entity_metadata_wrapper('user', $user);
+  $pid = $wrapper->{CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD}->value()->id;
+  drupal_goto('islandora/object/' . $pid);
+}
+
+/**
+ * Menu callback: Redirect the user to their own dashboard.
+ *
+ * @see cwrc_projects_menu()
+ */
+function _cwrc_projects_goto_dashboard() {
+  global $user;
+  drupal_goto('user/' . $user->uid . '/dashboard');
 }
 
 /* Organic groups callbacks. */
@@ -611,8 +607,6 @@ function cwrc_projects_update_lock_duration(&$form, $form_state) {
  * OG context negotiation callback.
  *
  * Sets OG context based on repository.
- *
- * @see cwrc_projects_og_context_negotiation_info()
  */
 function cwrc_projects_og_context_handler() {
   $object = menu_get_object('islandora_object', 2);
@@ -661,8 +655,6 @@ function cwrc_projects_og_context_handler() {
  * OG context negotiation callback.
  *
  * Sets OG context based on search facets.
- *
- * @see cwrc_projects_og_context_negotiation_info()
  */
 function cwrc_projects_og_context_handler_search() {
   $parameters = drupal_get_query_parameters();
@@ -701,43 +693,73 @@ function cwrc_projects_og_context_handler_search() {
   }
 }
 
-/* Theme preprocess functions. */
+/* Form-generating functions. */
 
 /**
- * Prepares variables for Islandora Dublin Core display templates.
+ * Form submission handler for node_form().
  *
- * Default template: islandora-dublin-core-display.tpl.php.
- *
- * @param array &$variables
- *   An associative array containing:
- *   - islandora_object: The Fedora / Islandora object whose metadata is to be
- *     displayed.
- *
- * @see islandora_theme()
+ * @see cwrc_projects_form_node_form_alter()
  */
-function cwrc_projects_preprocess_islandora_dublin_core_display(&$variables) {
-  $variables['mods_redirect'] = _cwrc_projects_get_mods_redirect($variables['islandora_object']);
+function cwrc_projects_update_lock_duration(&$form, $form_state) {
+  module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
+  $length = (int) $form_state['values']['field_object_lock_duration'][LANGUAGE_NONE][0]['value'];
+  $pid = $form_state['values']['field_top_level_collection'][LANGUAGE_NONE][0]['pid'];
+  $default_length = variable_get('islandora_object_lock_duration', 30);
+  $collection_lock = islandora_object_lock_length_get_collection_lock($pid);
+
+  if ($length > 0) {
+    if (isset($collection_lock->duration)) {
+      islandora_object_lock_length_remove_collection_lock($pid);
+    }
+    // Add the lock length.
+    islandora_object_lock_length_add_collection_lock($pid, $length);
+  }
+  else {
+    // null, zero, or negative length = no lock (use default)
+    islandora_object_lock_length_remove_collection_lock($pid);
+  }
+
+  // If the lock exists and is just default, remove it.
+  if (isset($collection_lock) && $length == $default_length) {
+    islandora_object_lock_length_remove_collection_lock($pid);
+  }
+}
+
+/* Theme functions. */
+
+/**
+ * Helper function to return HTML for a project logo.
+ *
+ * @return string
+ *   Returns an HTML string for a project logo if one exists, or an empty string
+ *   otherwise.
+ */
+function _cwrc_projects_og_context_logo() {
+  $ctx = og_context();
+  if (!empty($ctx)) {
+    $nid = $ctx['gid'];
+    $project_node = node_load($nid);
+    if (!$project_node) {
+      return;
+    }
+    if ($project_node->type != 'project') {
+      return;
+    }
+    if (empty($project_node->field_logo)) {
+      return;
+    }
+
+    $wrapper = entity_metadata_wrapper('node', $project_node);
+    $logo = $wrapper->field_logo->value();
+    if (!$logo) {
+      return;
+    }
+
+    return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
+  }
 }
 
 /* Helper functions. */
-
-/**
- * Helper function to issue a redirect to a user's research space.
- */
-function _cwrc_projects_goto_research_space() {
-  global $user;
-  $wrapper = entity_metadata_wrapper('user', $user);
-  $pid = $wrapper->{CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD}->value()->id;
-  drupal_goto('islandora/object/' . $pid);
-}
-
-/**
- * Helper function to issue a redirect to a user's dashboard.
- */
-function _cwrc_projects_goto_dashboard() {
-  global $user;
-  drupal_goto('user/' . $user->uid . '/dashboard');
-}
 
 /**
  * Helper function to determine the parent project for a given PID.
@@ -789,14 +811,8 @@ function _cwrc_projects_get_project($pid, $ancestors = NULL) {
 }
 
 /**
- * Determine if an object is the top-level collection for a project.
- *
- * @param string|object $pid
- *   A project ID.
- *
- * @return mixed|bool
- *   A matching PID if a research space could be found, or FALSE if there was an
- *   error when querying.
+ * Helper function to determine if the passed PID or Islandora object is the
+ * top-level collection for a project or not.
  */
 function _cwrc_projects_is_project($pid) {
   if (is_object($pid)) {
@@ -809,6 +825,26 @@ function _cwrc_projects_is_project($pid) {
     ->execute()
     ->fetchField();
 }
+
+/* Theme preprocess functions. */
+
+/**
+ * Prepares variables for Islandora Dublin Core display templates.
+ *
+ * Default template: islandora-dublin-core-display.tpl.php.
+ *
+ * @param array &$variables
+ *   An associative array containing:
+ *   - islandora_object: The Fedora / Islandora object whose metadata is to be
+ *     displayed.
+ *
+ * @see islandora_theme()
+ */
+function cwrc_projects_preprocess_islandora_dublin_core_display(&$variables) {
+  $variables['mods_redirect'] = _cwrc_projects_get_mods_redirect($variables['islandora_object']);
+}
+
+/* Helper functions. */
 
 /**
  * Determine if an object is the top-level collection for a research space.
@@ -875,40 +911,6 @@ function _cwrc_projects_join_block() {
   drupal_set_title($title, PASS_THROUGH);
 
   return $form;
-}
-
-/**
- * Helper function to return HTML for a project logo.
- *
- * @return string
- *   Returns an HTML string for a project logo if one exists, or an empty string
- *   otherwise.
- */
-function _cwrc_projects_og_context_logo() {
-  global $language;
-
-  $ctx = og_context();
-  if (!empty($ctx)) {
-    $nid = $ctx['gid'];
-    $project_node = node_load($nid);
-    if (!$project_node) {
-      return '';
-    }
-    if ($project_node->type != 'project') {
-      return '';
-    }
-    if (empty($project_node->field_logo)) {
-      return '';
-    }
-
-    $wrapper = entity_metadata_wrapper('node', $project_node);
-    $logo = $wrapper->field_logo->value();
-    if (!$logo) {
-      return '';
-    }
-
-    return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
-  }
 }
 
 /**
