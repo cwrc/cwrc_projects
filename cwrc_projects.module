@@ -264,7 +264,7 @@ function cwrc_projects_user_presave(&$edit, $account, $category) {
     $repository->ingestObject($object);
 
     // Store the object on the user profile for later.
-    $edit[CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD]['und'][0]['pid'] = $object->id;
+    $edit[CWRC_PROJECTS_RESEARCH_SPACE_PID_FIELD][LANGUAGE_NONE][0]['pid'] = $object->id;
 
     // Log that we created a research space.
     watchdog('cwrc_projects', 'Added a research space with PID @pid for user with username @username (UID @uid).', array(
