@@ -740,19 +740,19 @@ function _cwrc_projects_og_context_logo() {
     $nid = $ctx['gid'];
     $project_node = node_load($nid);
     if (!$project_node) {
-      return;
+      return '';
     }
     if ($project_node->type != 'project') {
-      return;
+      return '';
     }
     if (empty($project_node->field_logo)) {
-      return;
+      return '';
     }
 
     $wrapper = entity_metadata_wrapper('node', $project_node);
     $logo = $wrapper->field_logo->value();
     if (!$logo) {
-      return;
+      return '';
     }
 
     return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
@@ -811,8 +811,7 @@ function _cwrc_projects_get_project($pid, $ancestors = NULL) {
 }
 
 /**
- * Helper function to determine if the passed PID or Islandora object is the
- * top-level collection for a project or not.
+ * Helper to find if passed PID/object is a top-level collection for a project.
  */
 function _cwrc_projects_is_project($pid) {
   if (is_object($pid)) {
