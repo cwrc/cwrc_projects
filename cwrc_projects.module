@@ -133,14 +133,8 @@ function cwrc_projects_entity_presave($entity, $type) {
  */
 function cwrc_projects_entity_insert($entity, $type) {
   if ($type == 'node' && $entity->type == 'project') {
-    global $user;
-
     // Wrap the node.
     $wrapper = entity_metadata_wrapper('node', $entity);
-
-    // Get the connection and repository.
-    $connection = islandora_get_tuque_connection($user);
-    $repository = $connection->repository;
 
     // Get the islandora object using entity API.
     $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
