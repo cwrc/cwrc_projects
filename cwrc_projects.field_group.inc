@@ -8,7 +8,7 @@
  * Implements hook_field_group_info().
  */
 function cwrc_projects_field_group_info() {
-  $export = array();
+  $field_groups = array();
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -40,7 +40,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'closed',
     ),
   );
-  $export['group_advanced|node|project|form'] = $field_group;
+  $field_groups['group_advanced|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -72,7 +72,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'collapsible',
     ),
   );
-  $export['group_basic_information|node|project|form'] = $field_group;
+  $field_groups['group_basic_information|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -102,7 +102,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'collapsed',
     ),
   );
-  $export['group_contact|node|project|form'] = $field_group;
+  $field_groups['group_contact|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -136,7 +136,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'open',
     ),
   );
-  $export['group_contact|node|project|full'] = $field_group;
+  $field_groups['group_contact|node|project|full'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -168,7 +168,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'collapsed',
     ),
   );
-  $export['group_featured_objects|node|project|form'] = $field_group;
+  $field_groups['group_featured_objects|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -196,7 +196,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'closed',
     ),
   );
-  $export['group_layout|node|project|form'] = $field_group;
+  $field_groups['group_layout|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -226,7 +226,7 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'collapsed',
     ),
   );
-  $export['group_media|node|project|form'] = $field_group;
+  $field_groups['group_media|node|project|form'] = $field_group;
 
   $field_group = new stdClass();
   $field_group->disabled = FALSE; /* Edit this to true to make a default field_group disabled initially */
@@ -254,7 +254,18 @@ function cwrc_projects_field_group_info() {
       'formatter' => 'collapsed',
     ),
   );
-  $export['group_sponsors|node|project|form'] = $field_group;
+  $field_groups['group_sponsors|node|project|form'] = $field_group;
 
-  return $export;
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Advanced (all languages)');
+  t('Basic Information');
+  t('Connect with Us');
+  t('Contact');
+  t('Featured content');
+  t('Identity and Social Media');
+  t('Layout');
+  t('Sponsors');
+
+  return $field_groups;
 }
