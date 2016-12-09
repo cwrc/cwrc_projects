@@ -23,6 +23,5 @@ function cwrc_projects_menu_default_menu_custom() {
   t('Contains all the links for organic groups and their menus');
   t('OG menu');
 
-
   return $menus;
 }

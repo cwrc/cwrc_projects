@@ -10,7 +10,7 @@
 function cwrc_projects_field_default_field_bases() {
   $field_bases = array();
 
-  // Exported field_base: 'field_acknowledgements'
+  // Exported field_base: 'field_acknowledgements'.
   $field_bases['field_acknowledgements'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -36,7 +36,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'field_collection',
   );
 
-  // Exported field_base: 'field_banner_image'
+  // Exported field_base: 'field_banner_image'.
   $field_bases['field_banner_image'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -64,7 +64,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'image',
   );
 
-  // Exported field_base: 'field_copyrights'
+  // Exported field_base: 'field_copyrights'.
   $field_bases['field_copyrights'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -97,7 +97,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'link_field',
   );
 
-  // Exported field_base: 'field_description'
+  // Exported field_base: 'field_description'.
   $field_bases['field_description'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -121,7 +121,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_email_address'
+  // Exported field_base: 'field_email_address'.
   $field_bases['field_email_address'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -141,7 +141,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'email',
   );
 
-  // Exported field_base: 'field_featured_links'
+  // Exported field_base: 'field_featured_links'.
   $field_bases['field_featured_links'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -174,7 +174,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'link_field',
   );
 
-  // Exported field_base: 'field_featured_objects'
+  // Exported field_base: 'field_featured_objects'.
   $field_bases['field_featured_objects'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -200,7 +200,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'field_collection',
   );
 
-  // Exported field_base: 'field_full_name'
+  // Exported field_base: 'field_full_name'.
   $field_bases['field_full_name'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -222,7 +222,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text',
   );
 
-  // Exported field_base: 'field_link'
+  // Exported field_base: 'field_link'.
   $field_bases['field_link'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -255,7 +255,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'link_field',
   );
 
-  // Exported field_base: 'field_object'
+  // Exported field_base: 'field_object'.
   $field_bases['field_object'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -318,7 +318,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'islandora_object_field',
   );
 
-  // Exported field_base: 'field_object_lock_duration'
+  // Exported field_base: 'field_object_lock_duration'.
   $field_bases['field_object_lock_duration'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -338,7 +338,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'number_integer',
   );
 
-  // Exported field_base: 'field_phone_number'
+  // Exported field_base: 'field_phone_number'.
   $field_bases['field_phone_number'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -358,7 +358,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'telephone',
   );
 
-  // Exported field_base: 'field_project_categories'
+  // Exported field_base: 'field_project_categories'.
   $field_bases['field_project_categories'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -388,7 +388,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'taxonomy_term_reference',
   );
 
-  // Exported field_base: 'field_project_intro'
+  // Exported field_base: 'field_project_intro'.
   $field_bases['field_project_intro'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -412,7 +412,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_related_projects'
+  // Exported field_base: 'field_related_projects'.
   $field_bases['field_related_projects'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -451,7 +451,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'entityreference',
   );
 
-  // Exported field_base: 'field_research_space'
+  // Exported field_base: 'field_research_space'.
   $field_bases['field_research_space'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -509,7 +509,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'islandora_object_field',
   );
 
-  // Exported field_base: 'field_search_string'
+  // Exported field_base: 'field_search_string'.
   $field_bases['field_search_string'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -533,7 +533,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_social_links'
+  // Exported field_base: 'field_social_links'.
   $field_bases['field_social_links'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -566,7 +566,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'link_field',
   );
 
-  // Exported field_base: 'field_sponsors'
+  // Exported field_base: 'field_sponsors'.
   $field_bases['field_sponsors'] = array(
     'active' => 1,
     'cardinality' => -1,
@@ -592,7 +592,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'field_collection',
   );
 
-  // Exported field_base: 'field_text'
+  // Exported field_base: 'field_text'.
   $field_bases['field_text'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -616,7 +616,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_theme'
+  // Exported field_base: 'field_theme'.
   $field_bases['field_theme'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -654,7 +654,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'list_text',
   );
 
-  // Exported field_base: 'field_thumbnail_image'
+  // Exported field_base: 'field_thumbnail_image'.
   $field_bases['field_thumbnail_image'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -682,7 +682,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'image',
   );
 
-  // Exported field_base: 'field_title'
+  // Exported field_base: 'field_title'.
   $field_bases['field_title'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -707,7 +707,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text',
   );
 
-  // Exported field_base: 'field_top_level_collection'
+  // Exported field_base: 'field_top_level_collection'.
   $field_bases['field_top_level_collection'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -766,7 +766,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'islandora_object_field',
   );
 
-  // Exported field_base: 'field_user_bio'
+  // Exported field_base: 'field_user_bio'.
   $field_bases['field_user_bio'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -790,7 +790,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_user_registration_reason'
+  // Exported field_base: 'field_user_registration_reason'.
   $field_bases['field_user_registration_reason'] = array(
     'active' => 1,
     'cardinality' => 1,
@@ -814,7 +814,7 @@ function cwrc_projects_field_default_field_bases() {
     'type' => 'text_long',
   );
 
-  // Exported field_base: 'field_user_website'
+  // Exported field_base: 'field_user_website'.
   $field_bases['field_user_website'] = array(
     'active' => 1,
     'cardinality' => 1,

@@ -10,7 +10,7 @@
 function cwrc_projects_menu_default_menu_links() {
   $menu_links = array();
 
-  // Exported menu link: user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context=
+  // Exported menu link: user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context=.
   $menu_links['user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context='] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'http://beta.cwrc.ca/node/5#overlay-context=',
@@ -33,7 +33,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_log-out:user/logout
+  // Exported menu link: user-menu_log-out:user/logout.
   $menu_links['user-menu_log-out:user/logout'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'user/logout',
@@ -52,7 +52,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_messages:messages
+  // Exported menu link: user-menu_messages:messages.
   $menu_links['user-menu_messages:messages'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'messages',
@@ -72,7 +72,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_my-dashboard:user/my-dashboard
+  // Exported menu link: user-menu_my-dashboard:user/my-dashboard.
   $menu_links['user-menu_my-dashboard:user/my-dashboard'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'user/my-dashboard',
@@ -91,7 +91,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_my-profile:user
+  // Exported menu link: user-menu_my-profile:user.
   $menu_links['user-menu_my-profile:user'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'user',
@@ -114,7 +114,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_my-research-space:user/my-research-space
+  // Exported menu link: user-menu_my-research-space:user/my-research-space.
   $menu_links['user-menu_my-research-space:user/my-research-space'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'user/my-research-space',
@@ -133,7 +133,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
-  // Exported menu link: user-menu_user-account:user
+  // Exported menu link: user-menu_user-account:user.
   $menu_links['user-menu_user-account:user'] = array(
     'menu_name' => 'user-menu',
     'link_path' => 'user',
@@ -153,6 +153,7 @@ function cwrc_projects_menu_default_menu_links() {
     'language' => 'und',
     'menu_links_customized' => 1,
   );
+
   // Translatables
   // Included for use with string extractors like potx.
   t('CWRCShop Participants');
@@ -162,7 +163,6 @@ function cwrc_projects_menu_default_menu_links() {
   t('My profile');
   t('My research space');
   t('User account');
-
 
   return $menu_links;
 }

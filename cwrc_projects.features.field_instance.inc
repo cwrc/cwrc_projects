@@ -10,7 +10,8 @@
 function cwrc_projects_field_default_field_instances() {
   $field_instances = array();
 
-  // Exported field_instance: 'field_collection_item-field_acknowledgements-field_text'
+  // Exported field_instance:
+  // 'field_collection_item-field_acknowledgements-field_text'.
   $field_instances['field_collection_item-field_acknowledgements-field_text'] = array(
     'bundle' => 'field_acknowledgements',
     'default_value' => NULL,
@@ -46,7 +47,8 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_acknowledgements-field_title'
+  // Exported field_instance:
+  // 'field_collection_item-field_acknowledgements-field_title'.
   $field_instances['field_collection_item-field_acknowledgements-field_title'] = array(
     'bundle' => 'field_acknowledgements',
     'default_value' => NULL,
@@ -82,7 +84,8 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_featured_objects-field_description'
+  // Exported field_instance:
+  // 'field_collection_item-field_featured_objects-field_description'.
   $field_instances['field_collection_item-field_featured_objects-field_description'] = array(
     'bundle' => 'field_featured_objects',
     'default_value' => NULL,
@@ -118,7 +121,8 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_featured_objects-field_image'
+  // Exported field_instance:
+  // 'field_collection_item-field_featured_objects-field_image'.
   $field_instances['field_collection_item-field_featured_objects-field_image'] = array(
     'bundle' => 'field_featured_objects',
     'deleted' => 0,
@@ -186,7 +190,8 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_featured_objects-field_object'
+  // Exported field_instance:
+  // 'field_collection_item-field_featured_objects-field_object'.
   $field_instances['field_collection_item-field_featured_objects-field_object'] = array(
     'bundle' => 'field_featured_objects',
     'default_value' => NULL,
@@ -219,7 +224,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_sponsors-field_link'
+  // Exported field_instance: 'field_collection_item-field_sponsors-field_link'.
   $field_instances['field_collection_item-field_sponsors-field_link'] = array(
     'bundle' => 'field_sponsors',
     'default_value' => NULL,
@@ -271,7 +276,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'field_collection_item-field_sponsors-field_logo'
+  // Exported field_instance: 'field_collection_item-field_sponsors-field_logo'.
   $field_instances['field_collection_item-field_sponsors-field_logo'] = array(
     'bundle' => 'field_sponsors',
     'deleted' => 0,
@@ -341,7 +346,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-body'
+  // Exported field_instance: 'node-project-body'.
   $field_instances['node-project-body'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -412,7 +417,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_acknowledgements'
+  // Exported field_instance: 'node-project-field_acknowledgements'.
   $field_instances['node-project-field_acknowledgements'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -484,7 +489,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_banner_image'
+  // Exported field_instance: 'node-project-field_banner_image'.
   $field_instances['node-project-field_banner_image'] = array(
     'bundle' => 'project',
     'deleted' => 0,
@@ -586,7 +591,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_copyrights'
+  // Exported field_instance: 'node-project-field_copyrights'.
   $field_instances['node-project-field_copyrights'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -669,7 +674,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_email_address'
+  // Exported field_instance: 'node-project-field_email_address'.
   $field_instances['node-project-field_email_address'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -732,7 +737,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_featured_links'
+  // Exported field_instance: 'node-project-field_featured_links'.
   $field_instances['node-project-field_featured_links'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -816,7 +821,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_featured_objects'
+  // Exported field_instance: 'node-project-field_featured_objects'.
   $field_instances['node-project-field_featured_objects'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -881,7 +886,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_logo'
+  // Exported field_instance: 'node-project-field_logo'.
   $field_instances['node-project-field_logo'] = array(
     'bundle' => 'project',
     'deleted' => 0,
@@ -983,7 +988,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_object_lock_duration'
+  // Exported field_instance: 'node-project-field_object_lock_duration'.
   $field_instances['node-project-field_object_lock_duration'] = array(
     'bundle' => 'project',
     'default_value' => array(
@@ -1059,7 +1064,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_phone_number'
+  // Exported field_instance: 'node-project-field_phone_number'.
   $field_instances['node-project-field_phone_number'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1124,7 +1129,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_project_categories'
+  // Exported field_instance: 'node-project-field_project_categories'.
   $field_instances['node-project-field_project_categories'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1184,7 +1189,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_project_intro'
+  // Exported field_instance: 'node-project-field_project_intro'.
   $field_instances['node-project-field_project_intro'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1264,7 +1269,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_related_projects'
+  // Exported field_instance: 'node-project-field_related_projects'.
   $field_instances['node-project-field_related_projects'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1342,7 +1347,7 @@ function cwrc_projects_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'node-project-field_search_string'
+  // Exported field_instance: 'node-project-field_search_string'.
   $field_instances['node-project-field_search_string'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1409,7 +1414,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-field_social_links'
+  // Exported field_instance: 'node-project-field_social_links'.
   $field_instances['node-project-field_social_links'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1493,7 +1498,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-field_sponsors'
+  // Exported field_instance: 'node-project-field_sponsors'.
   $field_instances['node-project-field_sponsors'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1565,7 +1570,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-field_theme'
+  // Exported field_instance: 'node-project-field_theme'.
   $field_instances['node-project-field_theme'] = array(
     'bundle' => 'project',
     'default_value' => array(
@@ -1634,7 +1639,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-field_thumbnail_image'
+  // Exported field_instance: 'node-project-field_thumbnail_image'.
   $field_instances['node-project-field_thumbnail_image'] = array(
     'bundle' => 'project',
     'deleted' => 0,
@@ -1712,7 +1717,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-field_top_level_collection'
+  // Exported field_instance: 'node-project-field_top_level_collection'.
   $field_instances['node-project-field_top_level_collection'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -1775,7 +1780,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-group_group'
+  // Exported field_instance: 'node-project-group_group'.
   $field_instances['node-project-group_group'] = array(
     'bundle' => 'project',
     'default_value' => array(
@@ -1858,7 +1863,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-og_roles_permissions'
+  // Exported field_instance: 'node-project-og_roles_permissions'.
   $field_instances['node-project-og_roles_permissions'] = array(
     'bundle' => 'project',
     'default_value' => array(
@@ -1936,7 +1941,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'node-project-title_field'
+  // Exported field_instance: 'node-project-title_field'.
   $field_instances['node-project-title_field'] = array(
     'bundle' => 'project',
     'default_value' => NULL,
@@ -2004,7 +2009,8 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'taxonomy_term-project_categories-description_field'
+  // Exported field_instance:
+  // 'taxonomy_term-project_categories-description_field'.
   $field_instances['taxonomy_term-project_categories-description_field'] = array(
     'bundle' => 'project_categories',
     'default_value' => NULL,
@@ -2043,7 +2049,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'taxonomy_term-project_categories-name_field'
+  // Exported field_instance: 'taxonomy_term-project_categories-name_field'.
   $field_instances['taxonomy_term-project_categories-name_field'] = array(
     'bundle' => 'project_categories',
     'default_value' => NULL,
@@ -2080,7 +2086,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'user-user-field_full_name'
+  // Exported field_instance: 'user-user-field_full_name'.
   $field_instances['user-user-field_full_name'] = array(
     'bundle' => 'user',
     'default_value' => NULL,
@@ -2117,7 +2123,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'user-user-field_research_space'
+  // Exported field_instance: 'user-user-field_research_space'.
   $field_instances['user-user-field_research_space'] = array(
     'bundle' => 'user',
     'default_value' => NULL,
@@ -2151,7 +2157,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'user-user-field_user_bio'
+  // Exported field_instance: 'user-user-field_user_bio'.
   $field_instances['user-user-field_user_bio'] = array(
     'bundle' => 'user',
     'default_value' => NULL,
@@ -2187,7 +2193,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'user-user-field_user_registration_reason'
+  // Exported field_instance: 'user-user-field_user_registration_reason'.
   $field_instances['user-user-field_user_registration_reason'] = array(
     'bundle' => 'user',
     'default_value' => NULL,
@@ -2223,7 +2229,7 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
     ),
   );
 
-  // Exported field_instance: 'user-user-field_user_website'
+  // Exported field_instance: 'user-user-field_user_website'.
   $field_instances['user-user-field_user_website'] = array(
     'bundle' => 'user',
     'default_value' => NULL,
