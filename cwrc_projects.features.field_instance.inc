@@ -1155,6 +1155,12 @@ function cwrc_projects_field_default_field_instances() {
         'type' => 'hidden',
         'weight' => 0,
       ),
+      'homepage_slider' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
       'project_overview_grid_item' => array(
         'label' => 'above',
         'settings' => array(),
@@ -1666,6 +1672,12 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
         'weight' => -5,
       ),
       'full' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+      'homepage_slider' => array(
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
