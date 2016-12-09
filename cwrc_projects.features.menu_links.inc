@@ -80,6 +80,7 @@ function cwrc_projects_menu_default_menu_links() {
     'link_title' => 'My dashboard',
     'options' => array(
       'identifier' => 'user-menu_my-dashboard:user/my-dashboard',
+      'alter' => TRUE,
     ),
     'module' => 'system',
     'hidden' => 0,
@@ -122,6 +123,7 @@ function cwrc_projects_menu_default_menu_links() {
     'link_title' => 'My research space',
     'options' => array(
       'identifier' => 'user-menu_my-research-space:user/my-research-space',
+      'alter' => TRUE,
     ),
     'module' => 'system',
     'hidden' => 0,
