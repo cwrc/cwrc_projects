@@ -1358,9 +1358,16 @@ function cwrc_projects_field_default_field_instances() {
     'bundle' => 'project',
     'default_value' => NULL,
     'deleted' => 0,
-    'description' => 'Use this field to construct a query fragment that adds additional filters to searches that are executed within your project.<br /><br />
-
-NOTE: This only applies to searches executed within your project\'s context (ie when "this project" is selected in the search box and when viewing an object in your collection) and these filters can be removed by users.',
+    'description' => 'Use this field to add more \'default facets\' when you search within your project.<br />
+<br />
+You can add another default facet, by visiting the Collaboratory search page, and selecting some facets.<br />
+<br />
+For example if you click a Islandora Collection Content Model within the \'Type\' facet, the URL will be:
+<code>http://cwrc-dev-06.srv.ualberta.ca/islandora/search?islandora_solr_search_navigation=0&f[0]=RELS_EXT_hasModel_uri_s%3A%22info%5C%3Afedora%5C/islandora%5C%3AcollectionCModel%22</code><br />
+<br />
+The portion of the URL: <code>islandora_solr_search_navigation=0&f[0]=RELS_EXT_hasModel_uri_s%3A%22info%5C%3Afedora%5C/islandora%5C%3AcollectionCModel%22</code> is what determines that the search page should only show Islandora Collections.<br />
+<br />
+This portion of the URL can be copied into this field, to make searches within your Project include this facet by default.',
     'display' => array(
       'default' => array(
         'label' => 'above',
@@ -2342,9 +2349,16 @@ NOTE: This only applies to searches executed within your project\'s context (ie 
   t('Title');
   t('Top-level Collection');
   t('Use <em>Social Links</em> to list your social media accounts and/or blogs (ie Facebook, Twitter, etc.). To add a Facebook icon, set the <em>Custom link class</em> to <code>facebook</code>. To add a Twitter icon, set the <em>Custom link class</em> to <code>twitter</code>.');
-  t('Use this field to construct a query fragment that adds additional filters to searches that are executed within your project.<br /><br />
-
-NOTE: This only applies to searches executed within your project\'s context (ie when "this project" is selected in the search box and when viewing an object in your collection) and these filters can be removed by users.');
+  t('Use this field to add more \'default facets\' when you search within your project.<br />
+<br />
+You can add another default facet, by visiting the Collaboratory search page, and selecting some facets.<br />
+<br />
+For example if you click a Islandora Collection Content Model within the \'Type\' facet, the URL will be:
+<code>http://cwrc-dev-06.srv.ualberta.ca/islandora/search?islandora_solr_search_navigation=0&f[0]=RELS_EXT_hasModel_uri_s%3A%22info%5C%3Afedora%5C/islandora%5C%3AcollectionCModel%22</code><br />
+<br />
+The portion of the URL: <code>islandora_solr_search_navigation=0&f[0]=RELS_EXT_hasModel_uri_s%3A%22info%5C%3Afedora%5C/islandora%5C%3AcollectionCModel%22</code> is what determines that the search page should only show Islandora Collections.<br />
+<br />
+This portion of the URL can be copied into this field, to make searches within your Project include this facet by default.');
   t('Website');
   t('Why I want to join CWRC');
 
