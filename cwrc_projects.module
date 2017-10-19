@@ -764,25 +764,38 @@ function _cwrc_projects_og_context_logo() {
  * (or more than one parent project is found).
  */
 function _cwrc_projects_get_project($pid, $ancestors = NULL) {
+  // Passing in no ancestors means we should query for them.
   if ($ancestors === NULL) {
-    $ancestors = array();
+    $cid = __FUNCTION__ . ':' . $pid;
+    $ancestors = &drupal_static($cid);
+    if (!isset($ancestors)) {
+      if ($cache = cache_get($cid)) {
+        $ancestors = $cache->data;
+      }
+      else {
+        $ancestors = array();
 
-    // Get solarium client.
-    $client = cwrc_dashboards_get_solarium();
+        // Get solarium client.
+        $client = cwrc_dashboards_get_solarium();
 
-    // Build select query determining ancestry.
-    $query = $client->createSelect();
-    $query->setQuery('PID:"' . $pid . '"')
-      ->setFields(array("ancestors_ms"))
-      ->addSort('workflow_date_current_dt', $query::SORT_DESC)
-      ->setRows(1);
+        // Build select query determining ancestry.
+        $query = $client->createSelect();
+        $query->setQuery('PID:"' . $pid . '"')
+          ->setFields(array("ancestors_ms"))
+          ->addSort('workflow_date_current_dt', $query::SORT_DESC)
+          ->setRows(1);
 
-    // Get query results.
-    $results = $client->select($query);
+        // Get query results.
+        $results = $client->select($query);
 
-    // Set the new ancestors.
-    if ($results->getNumFound() > 0) {
-      $ancestors = $results->getDocuments()[0]['ancestors_ms'];
+        // Set the new ancestors.
+        if ($results->getNumFound() > 0) {
+          $ancestors = $results->getDocuments()[0]['ancestors_ms'];
+        }
+
+        // Cache this result for one week to avoid hammering SOLR.
+        cache_set($cid, $ancestors, 'cache', time() + 604800);
+      }
     }
   }
 
