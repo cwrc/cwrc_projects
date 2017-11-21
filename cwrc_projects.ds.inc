@@ -38,7 +38,7 @@ function cwrc_projects_ds_field_settings_info() {
   $ds_fieldsetting->view_mode = 'project_overview_grid_item';
   $ds_fieldsetting->settings = array(
     'title' => array(
-      'weight' => '-1',
+      'weight' => '1',
       'label' => 'hidden',
       'format' => 'default',
       'formatter_settings' => array(
@@ -170,11 +170,13 @@ function cwrc_projects_ds_layout_settings_info() {
       'ds_content' => array(
         0 => 'field_thumbnail_image',
         1 => 'title',
+        2 => 'body',
       ),
     ),
     'fields' => array(
       'field_thumbnail_image' => 'ds_content',
       'title' => 'ds_content',
+      'body' => 'ds_content',
     ),
     'classes' => array(),
     'wrappers' => array(
@@ -185,6 +187,7 @@ function cwrc_projects_ds_layout_settings_info() {
     'layout_attributes_merge' => 1,
     'layout_link_attribute' => '',
     'layout_link_custom' => '',
+    'layout_disable_css' => FALSE,
   );
   $export['node|project|project_overview_grid_item'] = $ds_layout;
 

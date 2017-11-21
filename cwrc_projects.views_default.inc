@@ -337,10 +337,8 @@ function cwrc_projects_views_default_views() {
     'combine_rewrite' => NULL,
     'reset_label' => NULL,
   );
-  $handler->display->display_options['exposed_form']['options']['input_required'] = 0;
-  $handler->display->display_options['exposed_form']['options']['text_input_required_format'] = 'full_html';
-  $handler->display->display_options['pager']['type'] = 'full';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '12';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['style_plugin'] = 'default';
   $handler->display->display_options['row_plugin'] = 'node';
   $handler->display->display_options['row_options']['links'] = FALSE;
@@ -472,14 +470,6 @@ function cwrc_projects_views_default_views() {
     t('Asc'),
     t('Desc'),
     t('Advanced options'),
-    t('Select any filter and click on Apply to see results'),
-    t('Items per page'),
-    t('- All -'),
-    t('Offset'),
-    t('« first'),
-    t('‹ previous'),
-    t('next ›'),
-    t('last »'),
     t('3x4 grid, paged (page)'),
     t('Projects'),
     t('Displays a 3x4, paged grid view of projects.'),
