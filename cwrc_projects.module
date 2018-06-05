@@ -31,6 +31,12 @@ function cwrc_projects_menu() {
     'access callback' => 'user_is_logged_in',
     'menu_name' => 'user-menu',
   );
+  $items['projects/json-lookup'] = array(
+    'title' => 'Projects json endpoint',
+    'page callback' => 'cwrc_projects_json_lookup',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -593,6 +599,23 @@ function _cwrc_projects_goto_research_space() {
 function _cwrc_projects_goto_dashboard() {
   global $user;
   drupal_goto('user/' . $user->uid . '/dashboard');
+}
+
+function cwrc_projects_json_lookup() {
+  $project_items = array();
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'project')
+    ->propertyCondition('status', NODE_PUBLISHED)
+    ->propertyOrderBy('sticky', 'DESC')
+    ->propertyOrderBy('title');
+
+  $result = $query->execute();
+  if (isset($result['node'])) {
+    $project_items_nids = array_keys($result['node']);
+    $project_items = entity_load('node', $project_items_nids);
+  }
+  drupal_json_output($project_items);
 }
 
 /* Organic groups callbacks. */
