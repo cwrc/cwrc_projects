@@ -601,6 +601,9 @@ function _cwrc_projects_goto_dashboard() {
   drupal_goto('user/' . $user->uid . '/dashboard');
 }
 
+/**
+ * Menu callback: display a json listing of content of type projects.
+ */
 function cwrc_projects_json_lookup() {
   $project_items = array();
   $query = new EntityFieldQuery();
