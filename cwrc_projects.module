@@ -797,14 +797,25 @@ function _cwrc_projects_og_context_logo() {
  */
 function _cwrc_project_tk_stamp_labels() {
   $build = '';
+  /** @var \IslandoraFedoraObject $object */
   $object = menu_get_object('islandora_object', 2);
   if (!$object) {
-    return FALSE;
+    return '';
   }
+
+  // Disable the block output if the object has one of the given models.
+  $models = array(
+    'islandora:collectionCModel',
+  );
+  $result = array_intersect($object->models, $models);
+  if (!empty($result)) {
+    return '';
+  }
+
   // We should be on the "view" callback.
   $menu_item = menu_get_item();
   if ($menu_item['path'] != 'islandora/object/%/view' && $menu_item['path'] != 'islandora/object/%') {
-    return FALSE;
+    return '';
   }
 
   // Show TK label to object.
