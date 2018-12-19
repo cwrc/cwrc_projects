@@ -420,6 +420,10 @@ function cwrc_projects_block_info() {
     'info' => t('CWRC Project Logo from OG Context'),
     'cache' => DRUPAL_NO_CACHE,
   );
+  $blocks['project_tk_stamp_labels'] = array(
+    'info' => t('CWRC Project TK and Stamp labels'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
   return $blocks;
 }
 
@@ -437,6 +441,11 @@ function cwrc_projects_block_view($delta = '') {
     case 'project_context_logo':
       $block['subject'] = t('Project Logo');
       $block['content'] = _cwrc_projects_og_context_logo();
+      break;
+
+    case 'project_tk_stamp_labels':
+      $block['subject'] = t('Project TK and Stamp labels');
+      $block['content'] = _cwrc_project_tk_stamp_labels();
       break;
   }
   return $block;
@@ -777,6 +786,64 @@ function _cwrc_projects_og_context_logo() {
 
     return "<img class=\"cwrc-project-logo-img\" src=\"" . file_create_url($logo['uri']) . "\" alt=\"" . $logo['alt'] . "\">";
   }
+}
+
+/**
+ * Helper function to return HTML for a project TK and Stamp Labels.
+ *
+ * @return string
+ *   Returns an HTML string for a project TK and Stamp Labels if one exists, or
+ * an empty string otherwise.
+ */
+function _cwrc_project_tk_stamp_labels() {
+  $build = '';
+  $object = menu_get_object('islandora_object', 2);
+  if (!$object) {
+    return FALSE;
+  }
+  // We should be on the "view" callback.
+  $menu_item = menu_get_item();
+  if ($menu_item['path'] != 'islandora/object/%/view' && $menu_item['path'] != 'islandora/object/%') {
+    return FALSE;
+  }
+
+  // Show TK label to object.
+  if (!empty($object['MODS']->content)) {
+    $xlinks = cwrc_search_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[not(@displayLabel="inherited")]', 'xlink:href');
+    if (!empty($xlinks)) {
+      $terms = tk_label_retrieve_term($xlinks);
+      $build .= '<div class="tk-label-items">';
+      $build .= tk_label_render_link_icon($terms);
+      $build .= '</div>';
+    }
+  }
+
+  // Show Workflow Stamp label to object.
+  if (!empty($object['WORKFLOW'])) {
+    $workflow = $object['WORKFLOW']->content;
+    $stamp = new SimpleXMLElement($workflow);
+    if (!empty($stamp) && !empty($stamp->workflow)) {
+      $categories = array(
+        'published' => array(
+          'class' => 'published',
+          'img_path' => drupal_get_path('theme', 'de_theme') . '/img/unchecked.png'
+        ),
+        'peer-reviewed/evaluated' => array(
+          'class' => 'peer-reviewed',
+          'img_path' => drupal_get_path('theme', 'de_theme') . '/img/peer-reviewed.png'
+        ),
+      );
+      $category = (string) $stamp->workflow[count($stamp->workflow) - 1]->xpath('activity/@category')[0];
+      $status = (string) $stamp->workflow[count($stamp->workflow) - 1]->xpath('activity/@status')[0];
+      if (in_array($category, array_keys($categories)) && $status == 'c') {
+        $build .= '<div class="object-workflow-stamp">';
+        $build .= '<span class="wokflow-stamp '. $categories[$category]['class'] . '"><img src="/' . $categories[$category]['img_path'] . '"></span>';
+        $build .= '</div>';
+      }
+    }
+  }
+
+  return $build;
 }
 
 /* Helper functions. */
