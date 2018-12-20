@@ -820,7 +820,7 @@ function _cwrc_project_tk_stamp_labels() {
 
   // Show TK label to object.
   if (!empty($object['MODS']->content)) {
-    $xlinks = cwrc_search_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[not(@displayLabel="inherited")]', 'xlink:href');
+    $xlinks = cwrc_search_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
     if (!empty($xlinks)) {
       $terms = tk_label_retrieve_term($xlinks);
       $build .= '<div class="tk-label-items">';
