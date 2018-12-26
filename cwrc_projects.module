@@ -110,7 +110,6 @@ function cwrc_projects_node_presave($node) {
         module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
         islandora_object_lock_length_add_collection_lock($pid, $object_lock_duration);
       }
-
       // In other cases we only need to change the label.
     }
     else {
@@ -118,6 +117,13 @@ function cwrc_projects_node_presave($node) {
       // Get the islandora object using entity API and change the label.
       $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
       $object->label = $node->title;
+
+      // Save the object lock duration on new nodes.
+      $object_lock_duration = (int) $node->field_object_lock_duration[LANGUAGE_NONE][0]['value'];
+      $global_duration = (int) variable_get('islandora_object_lock_duration', 30);
+      if ($object_lock_duration != $global_duration && $object_lock_duration > 0) {
+        cwrc_projects_set_lock_length_to_collections($node, $object_lock_duration);
+      }
     }
 
     // We want to force some text formats here.
@@ -1164,4 +1170,67 @@ function _cwrc_projects_user_has_research_space($account) {
   // If we get here, then we can be fairly confident that a user does not have a
   // research space.
   return FALSE;
+}
+
+/**
+ * Set the lock length for objects in the collection.
+ */
+function cwrc_projects_set_lock_length_to_collections($node, $object_lock_duration) {
+  if ($node === NULL || !og_is_group('node', $node->nid)) {
+    // Not a group.
+    return NULL;
+  }
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+  // Get solarium client.
+  $client = cwrc_dashboards_get_solarium();
+
+  // Build select query for assigned to me block.
+  $query = $client->createSelect();
+  $helper = $query->getHelper();
+  $query->setQuery('ancestors_ms:' . $helper->escapePhrase($wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value()->id))
+        ->setFields(array(
+          "PID",
+          "fgs_label_s",
+          "ancestors_ms",
+          "workflow_date_current_dt",
+        ))
+        ->addSort('workflow_date_current_dt', $query::SORT_DESC)
+        ->setRows(100);
+
+  // Get query results.
+  $results = $client->select($query);
+
+  // No recently edited objects for the current project.
+  if ($results->getNumFound() == 0) {
+    return NULL;
+  }
+
+  // Fill rows with objects.
+  foreach ($results as $document) {
+    cwrc_projects_islandora_object_lock_length_add_collection_lock($document['PID'], $object_lock_duration);
+  }
+
+  return TRUE;
+}
+
+/**
+ * Create a collection lock.
+ *
+ * @param string $pid
+ *   The pid of the collection to add the lock.
+ *
+ * @param string $duration
+ *   The length of the lock duration.
+ */
+function cwrc_projects_islandora_object_lock_length_add_collection_lock($pid, $duration) {
+  db_merge('islandora_object_lock_length_locks')
+    ->key(array(
+      'pid' => $pid,
+    ))
+    ->fields(array(
+      'pid' => $pid,
+      'duration' => $duration,
+    ))
+    ->execute();
 }
