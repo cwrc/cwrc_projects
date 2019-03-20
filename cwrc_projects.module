@@ -824,40 +824,20 @@ function _cwrc_project_tk_stamp_labels() {
     return '';
   }
 
-  // Show TK label to object.
-  if (!empty($object['MODS']->content)) {
-    $xlinks = cwrc_search_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
-    if (!empty($xlinks)) {
-      $terms = tk_label_retrieve_term($xlinks);
-      $build .= '<div class="tk-label-items">';
-      $build .= tk_label_render_link_icon($terms);
-      $build .= '</div>';
-    }
-  }
-
   // Show Workflow Stamp label to object.
-  if (!empty($object['WORKFLOW'])) {
-    $workflow = $object['WORKFLOW']->content;
-    $stamp = new SimpleXMLElement($workflow);
-    if (!empty($stamp) && !empty($stamp->workflow)) {
-      $categories = array(
-        'published' => array(
-          'class' => 'published',
-          'img_path' => drupal_get_path('theme', 'de_theme') . '/img/unchecked.png'
-        ),
-        'peer-reviewed/evaluated' => array(
-          'class' => 'peer-reviewed',
-          'img_path' => drupal_get_path('theme', 'de_theme') . '/img/peer-reviewed.png'
-        ),
-      );
-      $category = (string) $stamp->workflow[count($stamp->workflow) - 1]->xpath('activity/@category')[0];
-      $status = (string) $stamp->workflow[count($stamp->workflow) - 1]->xpath('activity/@status')[0];
-      if (in_array($category, array_keys($categories)) && $status == 'c') {
-        $build .= '<div class="object-workflow-stamp">';
-        $build .= '<span class="wokflow-stamp '. $categories[$category]['class'] . '"><img src="/' . $categories[$category]['img_path'] . '"></span>';
+  if(module_exists("tk_label")) {
+    // Add TK and Workflow stamp labels.
+      // Show TK label to object.
+    if (!empty($object['MODS']->content)) {
+      $xlinks = _tk_label_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
+      if (!empty($xlinks)) {
+        $terms = tk_label_retrieve_term($xlinks);
+        $build .= '<div class="tk-label-items">';
+        $build .= tk_label_render_link_icon($terms);
         $build .= '</div>';
       }
     }
+    _tk_label_add_stamp_labels_to_object($object, $build);
   }
 
   return $build;
