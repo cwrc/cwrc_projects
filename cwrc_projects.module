@@ -110,7 +110,6 @@ function cwrc_projects_node_presave($node) {
         module_load_include('inc', 'islandora_object_lock_length', 'includes/utilities');
         islandora_object_lock_length_add_collection_lock($pid, $object_lock_duration);
       }
-
       // In other cases we only need to change the label.
     }
     else {
@@ -118,6 +117,13 @@ function cwrc_projects_node_presave($node) {
       // Get the islandora object using entity API and change the label.
       $object = $wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value();
       $object->label = $node->title;
+
+      // Save the object lock duration on new nodes.
+      $object_lock_duration = (int) $node->field_object_lock_duration[LANGUAGE_NONE][0]['value'];
+      $global_duration = (int) variable_get('islandora_object_lock_duration', 30);
+      if ($object_lock_duration != $global_duration && $object_lock_duration > 0) {
+        cwrc_projects_set_lock_length_to_collections($node, $object_lock_duration);
+      }
     }
 
     // We want to force some text formats here.
@@ -420,6 +426,10 @@ function cwrc_projects_block_info() {
     'info' => t('CWRC Project Logo from OG Context'),
     'cache' => DRUPAL_NO_CACHE,
   );
+  $blocks['project_tk_stamp_labels'] = array(
+    'info' => t('CWRC Project TK and Stamp labels'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
   return $blocks;
 }
 
@@ -437,6 +447,11 @@ function cwrc_projects_block_view($delta = '') {
     case 'project_context_logo':
       $block['subject'] = t('Project Logo');
       $block['content'] = _cwrc_projects_og_context_logo();
+      break;
+
+    case 'project_tk_stamp_labels':
+      $block['subject'] = t('Project TK and Stamp labels');
+      $block['content'] = _cwrc_project_tk_stamp_labels();
       break;
   }
   return $block;
@@ -779,6 +794,55 @@ function _cwrc_projects_og_context_logo() {
   }
 }
 
+/**
+ * Helper function to return HTML for a project TK and Stamp Labels.
+ *
+ * @return string
+ *   Returns an HTML string for a project TK and Stamp Labels if one exists, or
+ * an empty string otherwise.
+ */
+function _cwrc_project_tk_stamp_labels() {
+  $build = '';
+  /** @var \IslandoraFedoraObject $object */
+  $object = menu_get_object('islandora_object', 2);
+  if (!$object) {
+    return '';
+  }
+
+  // Disable the block output if the object has one of the given models.
+  $models = array(
+    'islandora:collectionCModel',
+  );
+  $result = array_intersect($object->models, $models);
+  if (!empty($result)) {
+    return '';
+  }
+
+  // We should be on the "view" callback.
+  $menu_item = menu_get_item();
+  if ($menu_item['path'] != 'islandora/object/%/view' && $menu_item['path'] != 'islandora/object/%') {
+    return '';
+  }
+
+  // Show Workflow Stamp label to object.
+  if(module_exists("tk_label")) {
+    // Add TK and Workflow stamp labels.
+      // Show TK label to object.
+    if (!empty($object['MODS']->content)) {
+      $xlinks = _tk_label_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
+      if (!empty($xlinks)) {
+        $terms = tk_label_retrieve_term($xlinks);
+        $build .= '<div class="tk-label-items">';
+        $build .= tk_label_render_link_icon($terms);
+        $build .= '</div>';
+      }
+    }
+    _tk_label_add_stamp_labels_to_object($object, $build);
+  }
+
+  return $build;
+}
+
 /* Helper functions. */
 
 /**
@@ -1086,4 +1150,67 @@ function _cwrc_projects_user_has_research_space($account) {
   // If we get here, then we can be fairly confident that a user does not have a
   // research space.
   return FALSE;
+}
+
+/**
+ * Set the lock length for objects in the collection.
+ */
+function cwrc_projects_set_lock_length_to_collections($node, $object_lock_duration) {
+  if ($node === NULL || !og_is_group('node', $node->nid)) {
+    // Not a group.
+    return NULL;
+  }
+
+  $wrapper = entity_metadata_wrapper('node', $node);
+  // Get solarium client.
+  $client = cwrc_dashboards_get_solarium();
+
+  // Build select query for assigned to me block.
+  $query = $client->createSelect();
+  $helper = $query->getHelper();
+  $query->setQuery('ancestors_ms:' . $helper->escapePhrase($wrapper->{CWRC_PROJECTS_COLLECTION_PID_FIELD}->value()->id))
+        ->setFields(array(
+          "PID",
+          "fgs_label_s",
+          "ancestors_ms",
+          "workflow_date_current_dt",
+        ))
+        ->addSort('workflow_date_current_dt', $query::SORT_DESC)
+        ->setRows(100);
+
+  // Get query results.
+  $results = $client->select($query);
+
+  // No recently edited objects for the current project.
+  if ($results->getNumFound() == 0) {
+    return NULL;
+  }
+
+  // Fill rows with objects.
+  foreach ($results as $document) {
+    cwrc_projects_islandora_object_lock_length_add_collection_lock($document['PID'], $object_lock_duration);
+  }
+
+  return TRUE;
+}
+
+/**
+ * Create a collection lock.
+ *
+ * @param string $pid
+ *   The pid of the collection to add the lock.
+ *
+ * @param string $duration
+ *   The length of the lock duration.
+ */
+function cwrc_projects_islandora_object_lock_length_add_collection_lock($pid, $duration) {
+  db_merge('islandora_object_lock_length_locks')
+    ->key(array(
+      'pid' => $pid,
+    ))
+    ->fields(array(
+      'pid' => $pid,
+      'duration' => $duration,
+    ))
+    ->execute();
 }
