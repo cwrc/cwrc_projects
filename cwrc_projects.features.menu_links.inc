@@ -10,29 +10,6 @@
 function cwrc_projects_menu_default_menu_links() {
   $menu_links = array();
 
-  // Exported menu link: user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context=.
-  $menu_links['user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context='] = array(
-    'menu_name' => 'user-menu',
-    'link_path' => 'http://beta.cwrc.ca/node/5#overlay-context=',
-    'router_path' => '',
-    'link_title' => 'CWRCShop Participants',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-      'identifier' => 'user-menu_cwrcshop-participants:http://beta.cwrc.ca/node/5#overlay-context=',
-      'alter' => TRUE,
-    ),
-    'module' => 'menu',
-    'hidden' => 1,
-    'external' => 1,
-    'has_children' => 0,
-    'expanded' => 0,
-    'weight' => -46,
-    'customized' => 1,
-    'language' => 'und',
-    'menu_links_customized' => 1,
-  );
   // Exported menu link: user-menu_log-out:user/logout.
   $menu_links['user-menu_log-out:user/logout'] = array(
     'menu_name' => 'user-menu',
@@ -158,7 +135,6 @@ function cwrc_projects_menu_default_menu_links() {
 
   // Translatables
   // Included for use with string extractors like potx.
-  t('CWRCShop Participants');
   t('Log out');
   t('Messages');
   t('My dashboard');
