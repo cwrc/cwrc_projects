@@ -20,7 +20,9 @@ function cwrc_projects_default_fe_block_settings() {
     'i18n_block_language' => array(),
     'i18n_mode' => 0,
     'module' => 'cwrc_projects',
-    'node_types' => array(),
+    'node_types' => array(
+      0 => 'page',
+    ),
     'pages' => '',
     'roles' => array(),
     'themes' => array(
@@ -56,6 +58,29 @@ function cwrc_projects_default_fe_block_settings() {
     ),
     'title' => '',
     'visibility' => 1,
+  );
+
+  $export['cwrc_projects-project_tk_stamp_labels'] = array(
+    'cache' => -1,
+    'css_class' => '',
+    'custom' => 0,
+    'delta' => 'project_tk_stamp_labels',
+    'i18n_block_language' => array(),
+    'i18n_mode' => 0,
+    'module' => 'cwrc_projects',
+    'node_types' => array(),
+    'pages' => '',
+    'roles' => array(),
+    'themes' => array(
+      'de_theme' => array(
+        'region' => 'content',
+        'status' => 1,
+        'theme' => 'de_theme',
+        'weight' => -52,
+      ),
+    ),
+    'title' => '<none>',
+    'visibility' => 0,
   );
 
   $export['fieldblock-874a8e164b51a4d1eddd5b90118eb12f'] = array(
