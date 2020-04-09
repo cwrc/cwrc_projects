@@ -829,11 +829,12 @@ function _cwrc_project_tk_stamp_labels() {
     // Add TK and Workflow stamp labels.
       // Show TK label to object.
     if (!empty($object['MODS']->content)) {
-      $xlinks = _tk_label_get_attributes_from_xml($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
-      if (!empty($xlinks)) {
-        $terms = tk_label_retrieve_term($xlinks);
+      //$xlinks = _tk_label_add_tk_labels_to_object($object['MODS']->content, '//mods:accessCondition[@xlink:href]', 'xlink:href');
+      $tk_labels = '';
+      _tk_label_add_tk_labels_to_object($object, $tk_labels, true);
+      if (!empty($tk_labels)) {
         $build .= '<div class="tk-label-items">';
-        $build .= tk_label_render_link_icon($terms);
+        $build .= $tk_labels;
         $build .= '</div>';
       }
     }
